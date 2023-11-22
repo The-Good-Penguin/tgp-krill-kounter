@@ -1,0 +1,10 @@
+BasedOnStyle: WebKit
+Language: Cpp
+IndentWidth: 4
+UseTab: false
+IndentCaseLabels: true
+BreakBeforeBraces: Allman
+NamespaceIndentation: All
+AccessModifierOffset: 0
+IndentAccessModifiers: true
+AlignConsecutiveAssignments: true
