@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(app-webrtc VERSION 0.1.0)
+project(KrillKounter VERSION 0.1.0)
 
 # C++20
 set(CMAKE_CXX_STANDARD 20)
@@ -24,29 +24,29 @@ file(GLOB sources CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*/*.cc
 )
 
-add_executable(app-name src/main.cc ${sources})
+add_executable(KrillKounter src/main.cc ${sources})
 
 # Include directories
 include_directories(${JSONGLIB_INCLUDE_DIRS})
 include_directories(${SIGNALCPP_INCLUDE_DIRS})
 
-target_include_directories(app-name PUBLIC
+target_include_directories(KrillKounter PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 # Link libraries
-target_link_libraries(app-name PUBLIC ${JSONGLIB_LIBRARIES})
+target_link_libraries(KrillKounter PUBLIC ${JSONGLIB_LIBRARIES})
 
-target_link_libraries(app-name PUBLIC ${SIGNALCPP_LIBRARIES})
+target_link_libraries(KrillKounter PUBLIC ${SIGNALCPP_LIBRARIES})
 
-target_link_libraries(app-name PUBLIC ${CMAKE_DL_LIBS})
+target_link_libraries(KrillKounter PUBLIC ${CMAKE_DL_LIBS})
 
 # We link C++ files
-set_target_properties(app-name PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(KrillKounter PROPERTIES LINKER_LANGUAGE CXX)
 
 # Project metadata
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
 
-install(TARGETS app-name RUNTIME DESTINATION bin)
+install(TARGETS KrillKounter RUNTIME DESTINATION bin)
