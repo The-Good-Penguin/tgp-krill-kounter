@@ -2,12 +2,12 @@
 
 // Public functions
 
-void cSDWriter::seqWrite(
+void cSDWriter::randWrite(
     std::string devicePath,
     uint blockSize,
     uint blockCount,
-    int randSeed
-) {
+    int randSeed)
+{
     // open file
     std::ofstream device;
     openDevice(devicePath, device);
@@ -15,16 +15,42 @@ void cSDWriter::seqWrite(
     // RNG seed
     std::srand(randSeed);
 
-
-    for (int count = 0; count < blockCount; count++) {
+    for (int count = 0; count < blockCount; count++)
+    {
         // generate RNG data
-        uint8_t data[blockSize]; 
-        for (uint byte = 0; byte < blockSize; byte++) {
+        uint8_t data[blockSize];
+        for (uint byte = 0; byte < blockSize; byte++)
+        {
             data[byte] = std::rand() % 256;
         }
 
         // write data
-        device.write((char*) &data[0], blockSize);
+        device.write((char*)&data[0], blockSize);
+    }
+
+    closeDevice(device);
+}
+
+void cSDWriter::seqWrite(
+    std::string devicePath,
+    uint blockSize,
+    uint blockCount)
+{
+    // open file
+    std::ofstream device;
+    openDevice(devicePath, device);
+
+    // write data
+    for (int count = 0; count < blockCount; count++)
+    {
+        // generate data
+        uint8_t data[blockSize];
+        for (uint byte = 0; byte < blockSize; byte++)
+        {
+            data[byte] = 0xff;
+        }
+
+        device.write((char*)&data[0], blockSize);
     }
 
     closeDevice(device);
@@ -34,8 +60,8 @@ void cSDWriter::seqWrite(
 
 void cSDWriter::openDevice(
     std::string devicePath,
-    std::ofstream& file
-) {
+    std::ofstream& file)
+{
     int status = EXIT_SUCCESS;
 
     file.open(devicePath);
@@ -45,7 +71,7 @@ void cSDWriter::openDevice(
 }
 
 void cSDWriter::closeDevice(
-    std::ofstream& file
-) {
+    std::ofstream& file)
+{
     file.close();
 }

@@ -2,26 +2,28 @@
 #ifndef _CSDWRITER_H
 #define _CSDWRITER_H
 
-#include <string>
 #include <fstream>
+#include <string>
 
-class cSDWriter {
+class cSDWriter
+{
     public:
-        void seqWrite(
+        void randWrite(
             std::string devicePath,
             uint blockSize,
             uint blockCount,
-            int randSeed
-        );
+            int randSeed);
+        void seqWrite(
+            std::string devicePath,
+            uint blockSize,
+            uint blockCount);
 
     private:
         void openDevice(
             std::string devicePath,
-            std::ofstream& file
-        );
+            std::ofstream& file);
         void closeDevice(
-            std::ofstream& file
-        );
+            std::ofstream& file);
 };
 
 #endif /* _CSDWRITER_H */
