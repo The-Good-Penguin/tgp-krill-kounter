@@ -1,6 +1,7 @@
 BasedOnStyle: WebKit
 Language: Cpp
 IndentWidth: 4
+ColumnLimit: 80
 UseTab: false
 IndentCaseLabels: true
 BreakBeforeBraces: Allman
