@@ -34,4 +34,13 @@ struct sDeviceSpecs
         std::string mdt;
 };
 
+struct jsonDeviceEntry
+{
+        std::string deviceRef;
+        std::string serialNumber;
+        std::string previousPath;
+        struct sBlockStats stats;
+        double totalBytesWritten;
+};
+
 #endif /* _STRUCTS_H */
