@@ -5,6 +5,7 @@
 #include "../library/include/structs.hh"
 #include <json-glib/json-glib.h>
 #include <string>
+#include <vector>
 
 class cJsonParser
 {
@@ -15,6 +16,7 @@ class cJsonParser
         bool getTotalBytesWritten(std::string deviceRef, double* pValue);
         bool getStats(std::string deviceRef, struct sBlockStats* pStats);
         bool getPath(std::string deviceRef, std::string* pValue);
+        bool getDeviceRefs(std::vector<std::string>* pValue);
 
     private:
         bool getValueAsInt(

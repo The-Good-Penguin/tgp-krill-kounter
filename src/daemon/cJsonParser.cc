@@ -217,6 +217,27 @@ bool cJsonParser::getPath(std::string deviceRef, std::string* pValue)
     return true; // success
 }
 
+bool cJsonParser::getDeviceRefs(std::vector<std::string>* pValue)
+{
+    GError* pError      = nullptr;
+    JsonReader* pReader = json_reader_new(json_parser_get_root(_pJsonParser));
+    pError              = (GError*)json_reader_get_error(pReader);
+    if (pError)
+    {
+        LOG_EVENT(LOG_ERR, "Unable to parse file: %s\n", pError->message);
+        g_error_free(pError);
+        return false; // failure
+    }
+
+    for (uint i = 0; i < (uint)json_reader_count_members(pReader); i++)
+    {
+        pValue->push_back((std::string)json_reader_list_members(pReader)[i]);
+    }
+
+    g_object_unref(pReader);
+    return true; // success
+}
+
 // private function
 
 bool cJsonParser::getValueAsInt(
