@@ -1,0 +1,46 @@
+{
+    "a": {
+        "serial_number": "123abc",
+        "previous_path": "/dev/XXX",
+        "previous_stats": {
+            "read_io": 0,
+            "read_merges": 0,
+            "read_sectors": 0,
+            "read_ticks": 0,
+            "write_io": 0,
+            "write_merges": 0,
+            "write_sectors": 0,
+            "write_ticks": 0,
+            "in_flight": 0,
+            "io_ticks": 0,
+            "time_in_queue": 0,
+            "discard_io": 0,
+            "discard_merges": 0,
+            "discard_sectors": 0,
+            "discard_ticks": 0
+        },
+        "total_bytes_written": 123
+    },
+    "b": {
+        "serial_number": "456def",
+        "previous_path": "/dev/YYY",
+        "previous_stats": {
+            "read_io": 1,
+            "read_merges": 1,
+            "read_sectors": 1,
+            "read_ticks": 1,
+            "write_io": 1,
+            "write_merges": 1,
+            "write_sectors": 1,
+            "write_ticks": 1,
+            "in_flight": 1,
+            "io_ticks": 1,
+            "time_in_queue": 1,
+            "discard_io": 1,
+            "discard_merges": 1,
+            "discard_sectors": 1,
+            "discard_ticks": 1
+        },
+        "total_bytes_written": 456
+    }
+}
