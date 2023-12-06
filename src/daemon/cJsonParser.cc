@@ -43,7 +43,7 @@ bool cJsonParser::closeJson()
     return true; // success
 }
 
-bool cJsonParser::getSerialNumber(std::string deviceRef, std::string* pValue)
+bool cJsonParser::getTotalBytesWritten(std::string serialNumber, double* pValue)
 {
     GError* pError      = nullptr;
     JsonReader* pReader = json_reader_new(json_parser_get_root(_pJsonParser));
@@ -55,38 +55,7 @@ bool cJsonParser::getSerialNumber(std::string deviceRef, std::string* pValue)
         return false; // failure
     }
 
-    json_reader_read_member(pReader, deviceRef.c_str());
-    json_reader_read_member(pReader, "serial_number");
-    std::string output = (std::string)json_reader_get_string_value(pReader);
-
-    pError = (GError*)json_reader_get_error(pReader);
-    if (pError)
-    {
-        LOG_EVENT(
-            LOG_ERR, "Unable to parse 'serial_number': %s\n", pError->message);
-        g_error_free(pError);
-        return false; // failure
-    }
-
-    *pValue = output;
-
-    g_object_unref(pReader);
-    return true; // success
-}
-
-bool cJsonParser::getTotalBytesWritten(std::string deviceRef, double* pValue)
-{
-    GError* pError      = nullptr;
-    JsonReader* pReader = json_reader_new(json_parser_get_root(_pJsonParser));
-    pError              = (GError*)json_reader_get_error(pReader);
-    if (pError)
-    {
-        LOG_EVENT(LOG_ERR, "Unable to parse file: %s\n", pError->message);
-        g_error_free(pError);
-        return false; // failure
-    }
-
-    json_reader_read_member(pReader, deviceRef.c_str());
+    json_reader_read_member(pReader, serialNumber.c_str());
     json_reader_read_member(pReader, "total_bytes_written");
     double output = (double)json_reader_get_double_value(pReader);
 
@@ -105,7 +74,7 @@ bool cJsonParser::getTotalBytesWritten(std::string deviceRef, double* pValue)
     return true; // success
 }
 
-bool cJsonParser::getStats(std::string deviceRef, struct sBlockStats* pStats)
+bool cJsonParser::getStats(std::string serialNumber, struct sBlockStats* pStats)
 {
     GError* pError      = nullptr;
     JsonReader* pReader = json_reader_new(json_parser_get_root(_pJsonParser));
@@ -117,7 +86,7 @@ bool cJsonParser::getStats(std::string deviceRef, struct sBlockStats* pStats)
         return false; // failure
     }
 
-    json_reader_read_member(pReader, deviceRef.c_str());
+    json_reader_read_member(pReader, serialNumber.c_str());
     json_reader_read_member(pReader, "previous_stats");
 
     int numErrors = 0;
@@ -186,7 +155,7 @@ bool cJsonParser::getStats(std::string deviceRef, struct sBlockStats* pStats)
     return numErrors > 0 ? false : true;
 }
 
-bool cJsonParser::getPath(std::string deviceRef, std::string* pValue)
+bool cJsonParser::getPath(std::string serialNumber, std::string* pValue)
 {
     GError* pError      = nullptr;
     JsonReader* pReader = json_reader_new(json_parser_get_root(_pJsonParser));
@@ -198,7 +167,7 @@ bool cJsonParser::getPath(std::string deviceRef, std::string* pValue)
         return false; // failure
     }
 
-    json_reader_read_member(pReader, deviceRef.c_str());
+    json_reader_read_member(pReader, serialNumber.c_str());
     json_reader_read_member(pReader, "previous_path");
     std::string output = (std::string)json_reader_get_string_value(pReader);
 
@@ -217,7 +186,7 @@ bool cJsonParser::getPath(std::string deviceRef, std::string* pValue)
     return true; // success
 }
 
-bool cJsonParser::getDeviceRefs(std::vector<std::string>* pValue)
+bool cJsonParser::getSerialNumbers(std::vector<std::string>* pValue)
 {
     GError* pError      = nullptr;
     JsonReader* pReader = json_reader_new(json_parser_get_root(_pJsonParser));

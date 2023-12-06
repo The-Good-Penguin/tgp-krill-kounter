@@ -36,7 +36,6 @@ struct sDeviceSpecs
 
 struct jsonDeviceEntry
 {
-        std::string deviceRef;
         std::string serialNumber;
         std::string previousPath;
         struct sBlockStats stats;

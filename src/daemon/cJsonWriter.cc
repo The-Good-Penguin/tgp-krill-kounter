@@ -11,7 +11,7 @@ cJsonWriter::cJsonWriter() { _pJsonBuilder = json_builder_new(); }
 // public functions
 
 bool cJsonWriter::writeJson(std::string jsonPathInput,
-    std::string jsonPathOutput, std::string deviceRef, std::string serialNumber,
+    std::string jsonPathOutput, std::string serialNumber,
     std::string previousPath, struct sBlockStats* pStats,
     uintmax_t totalBytesWritten)
 {
@@ -33,9 +33,8 @@ bool cJsonWriter::writeJson(std::string jsonPathInput,
         // build old json data
         for (uint i = 0; i < devices.size(); i++)
         {
-            addEntryToBuilder(devices[i].deviceRef, devices[i].serialNumber,
-                devices[i].previousPath, &(devices[i].stats),
-                devices[i].totalBytesWritten);
+            addEntryToBuilder(devices[i].serialNumber, devices[i].previousPath,
+                &(devices[i].stats), devices[i].totalBytesWritten);
         }
 
         f.close();
@@ -44,12 +43,11 @@ bool cJsonWriter::writeJson(std::string jsonPathInput,
     /*
     build new json data
     -----
-    If an entry with a matching deviceRef has been loaded into the builder
+    If an entry with a matching serialNumber has been loaded into the builder
     via addEntryToBuilder() above, then the values for that entry will be
     overwritten here before any json is generated or written back to disk.
     */
-    addEntryToBuilder(
-        deviceRef, serialNumber, previousPath, pStats, totalBytesWritten);
+    addEntryToBuilder(serialNumber, previousPath, pStats, totalBytesWritten);
 
     json_builder_end_object(_pJsonBuilder);
 
@@ -99,31 +97,29 @@ bool cJsonWriter::readExistingJson(
     }
 
     // get all device references
-    std::vector<std::string> deviceRefs;
-    if (!parser.getDeviceRefs(&deviceRefs))
+    std::vector<std::string> serialNumbers;
+    if (!parser.getSerialNumbers(&serialNumbers))
     {
         LOG_EVENT(LOG_ERR, "Unable to parse device references from file");
         return false; // failure
     }
 
     // build jsonDeviceEntry for each device in json file, add to pDevices
-    for (uint i = 0; i < deviceRefs.size(); i++)
+    for (uint i = 0; i < serialNumbers.size(); i++)
     {
         struct jsonDeviceEntry device;
         bool error = false;
 
-        device.deviceRef = deviceRefs[i];
-        error
-            |= !parser.getSerialNumber(device.deviceRef, &device.serialNumber);
-        error |= !parser.getPath(device.deviceRef, &device.previousPath);
-        error |= !parser.getStats(device.deviceRef, &device.stats);
+        device.serialNumber = serialNumbers[i];
+        error |= !parser.getPath(device.serialNumber, &device.previousPath);
+        error |= !parser.getStats(device.serialNumber, &device.stats);
         error |= !parser.getTotalBytesWritten(
-            device.deviceRef, &device.totalBytesWritten);
+            device.serialNumber, &device.totalBytesWritten);
 
         if (error)
         {
-            LOG_EVENT(LOG_ERR, "Unable to parse device reference: %s\n",
-                deviceRefs[i]);
+            LOG_EVENT(LOG_ERR, "Unable to parse serial number: %s\n",
+                serialNumbers[i]);
             break;
         }
         pDevices->push_back(device);
@@ -134,16 +130,13 @@ bool cJsonWriter::readExistingJson(
     return true; // success
 }
 
-void cJsonWriter::addEntryToBuilder(std::string deviceRef,
-    std::string serialNumber, std::string previousPath,
-    struct sBlockStats* pStats, uintmax_t totalBytesWritten)
+void cJsonWriter::addEntryToBuilder(std::string serialNumber,
+    std::string previousPath, struct sBlockStats* pStats,
+    uintmax_t totalBytesWritten)
 {
-    // deviceRef
-    json_builder_set_member_name(_pJsonBuilder, deviceRef.c_str());
+    // serial number
+    json_builder_set_member_name(_pJsonBuilder, serialNumber.c_str());
     json_builder_begin_object(_pJsonBuilder);
-    // - serial number
-    json_builder_set_member_name(_pJsonBuilder, "serialNumber");
-    json_builder_add_string_value(_pJsonBuilder, serialNumber.c_str());
     // - previous path
     json_builder_set_member_name(_pJsonBuilder, "previousPath");
     json_builder_add_string_value(_pJsonBuilder, previousPath.c_str());
