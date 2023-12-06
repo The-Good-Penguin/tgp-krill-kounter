@@ -1,6 +1,5 @@
 {
-    "a": {
-        "serial_number": "123abc",
+    "123abc": {
         "previous_path": "/dev/XXX",
         "previous_stats": {
             "read_io": 0,
@@ -21,8 +20,7 @@
         },
         "total_bytes_written": 123
     },
-    "b": {
-        "serial_number": "456def",
+    "456def": {
         "previous_path": "/dev/YYY",
         "previous_stats": {
             "read_io": 1,
