@@ -10,16 +10,16 @@
 class cStatReader
 {
     public:
-        // General
         std::vector<std::string> findDevices(void);
-
-        // Storage Specs
-        uintmax_t getSpaceInfo(std::string deviceName);
-        void getStats(std::string deviceName, struct sBlockStats* pStats);
-        void getSpecs(std::string devicePath, struct sDeviceSpecs* pSpecs);
+        bool getSpaceInfo(std::string deviceName, uintmax_t* pValue);
+        bool getStats(std::string deviceName, struct sBlockStats* pStats);
+        bool getSpecs(std::string deviceName, struct sDeviceSpecs* pSpecs);
 
     private:
         int _sectorSize = 512;
+        bool getSpecsEmmc(std::string deviceName, struct sDeviceSpecs* pSpecs);
+        bool getSerialNumberFallback(
+            std::string deviceName, struct sDeviceSpecs* pSpecs);
 };
 
 #endif /* _CSTATREADER_H */

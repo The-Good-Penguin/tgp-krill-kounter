@@ -1,8 +1,12 @@
 #include "cStatReader.hh"
 #include "../utils/log-event.hh"
 
+#include <errno.h>
 #include <filesystem>
 #include <fstream>
+#include <string.h>
+
+// public functions
 
 std::vector<std::string> cStatReader::findDevices(void)
 {
@@ -19,19 +23,19 @@ std::vector<std::string> cStatReader::findDevices(void)
     return paths;
 }
 
-uintmax_t cStatReader::getSpaceInfo(std::string deviceName)
+bool cStatReader::getSpaceInfo(std::string deviceName, uintmax_t* pValue)
 {
     // Check path is valid
     const std::filesystem::path device = ("/dev/" + deviceName);
     if (std::filesystem::exists(device) == false)
     {
         LOG_EVENT(LOG_ERR, "Device does not exist");
-        exit(EXIT_FAILURE);
+        return false; // failure
     }
     if (std::filesystem::is_block_file(device) == false)
     {
         LOG_EVENT(LOG_ERR, "Path is not a block device");
-        exit(EXIT_FAILURE);
+        return false; // failure
     }
 
     // get size
@@ -39,21 +43,23 @@ uintmax_t cStatReader::getSpaceInfo(std::string deviceName)
     if (ifs.is_open() != true)
     {
         LOG_EVENT(LOG_ERR, "Failed to get device size");
-        exit(EXIT_FAILURE);
+        return false; // failure
     }
     std::string response;
     std::getline(ifs, response);
-    return (uintmax_t)std::stoi(response);
+    *pValue = (uintmax_t)std::stoi(response);
+
+    return true; // success
 }
 
-void cStatReader::getStats(std::string deviceName, struct sBlockStats* pStats)
+bool cStatReader::getStats(std::string deviceName, struct sBlockStats* pStats)
 {
     // get /sys/block/<dev>/stat
     auto ifs = std::ifstream("/sys/block/" + deviceName + "/stat");
     if (ifs.is_open() != true)
     {
         LOG_EVENT(LOG_ERR, "Failed to get device stats");
-        exit(EXIT_FAILURE);
+        return false; // failure
     }
     std::string line;
     std::getline(ifs, line);
@@ -61,7 +67,7 @@ void cStatReader::getStats(std::string deviceName, struct sBlockStats* pStats)
     if (line.empty())
     {
         LOG_EVENT(LOG_ERR, "Device does not exist");
-        exit(EXIT_FAILURE);
+        return false; // failure
     }
 
     // carve up data into struct
@@ -88,9 +94,41 @@ void cStatReader::getStats(std::string deviceName, struct sBlockStats* pStats)
     pStats->discardMerges  = std::stoi(vec[12]);
     pStats->discardSectors = std::stoi(vec[13]);
     pStats->discardTicks   = std::stoi(vec[14]);
+
+    return true; // success
 }
 
-void cStatReader::getSpecs(std::string devicePath, struct sDeviceSpecs* pSpecs)
+bool cStatReader::getSpecs(std::string deviceName, struct sDeviceSpecs* pSpecs)
+{
+
+    // attempt to access CID
+    if (getSpecsEmmc(deviceName, pSpecs))
+    {
+        return true; // success
+    }
+
+    // clearup failed CID read
+    pSpecs->manfid.enabled = false;
+    pSpecs->oemid.enabled  = false;
+    pSpecs->name.enabled   = false;
+    pSpecs->hwrev.enabled  = false;
+    pSpecs->fwrev.enabled  = false;
+    pSpecs->serial.enabled = false;
+    pSpecs->mdt.enabled    = false;
+
+    // attempt fallback method
+    if (getSerialNumberFallback(deviceName, pSpecs))
+    {
+        return true; // success
+    }
+
+    return false; // failure
+}
+
+// private functions
+
+bool cStatReader::getSpecsEmmc(
+    std::string deviceName, struct sDeviceSpecs* pSpecs)
 {
     /*
     Likely to fail when reading from SD Cards connected via a USB SD Card
@@ -102,12 +140,13 @@ void cStatReader::getSpecs(std::string devicePath, struct sDeviceSpecs* pSpecs)
     https://www.cameramemoryspeed.com/sd-memory-card-faq/reading-sd-card-cid-serial-psn-internal-numbers/
     */
 
+    std::string devicePath = "/sys/block/" + deviceName + "/device/block";
+
     // Check path is valid
-    const std::filesystem::path device = (devicePath);
-    if (std::filesystem::exists(device) == false)
+    if (std::filesystem::exists(devicePath) == false)
     {
         LOG_EVENT(LOG_ERR, "Failed to open devicePath, doesn't exist");
-        exit(EXIT_FAILURE);
+        return false; // failure
     }
 
     // Manufacturer ID
@@ -115,63 +154,106 @@ void cStatReader::getSpecs(std::string devicePath, struct sDeviceSpecs* pSpecs)
     if (ifs.is_open() != true)
     {
         LOG_EVENT(LOG_ERR, "Failed to get Manufacturer ID");
-        exit(EXIT_FAILURE);
+        return false; // failure
     }
-    std::getline(ifs, pSpecs->manfid);
+    std::getline(ifs, pSpecs->manfid.value);
+    pSpecs->manfid.enabled = true;
 
     // OEM ID
     ifs = std::ifstream(devicePath + "/oemid");
     if (ifs.is_open() != true)
     {
         LOG_EVENT(LOG_ERR, "Failed to get OEM ID");
-        exit(EXIT_FAILURE);
+        return false; // failure
     }
-    std::getline(ifs, pSpecs->oemid);
+    std::getline(ifs, pSpecs->oemid.value);
+    pSpecs->oemid.enabled = true;
 
     // Name
     ifs = std::ifstream(devicePath + "/name");
     if (ifs.is_open() != true)
     {
         LOG_EVENT(LOG_ERR, "Failed to get Device Name");
-        exit(EXIT_FAILURE);
+        return false; // failure
     }
-    std::getline(ifs, pSpecs->name);
+    std::getline(ifs, pSpecs->name.value);
+    pSpecs->name.enabled = true;
 
     // Hardware Revision
     ifs = std::ifstream(devicePath + "/hwrev");
     if (ifs.is_open() != true)
     {
         LOG_EVENT(LOG_ERR, "Failed to get Hardware Revision");
-        exit(EXIT_FAILURE);
+        return false; // failure
     }
-    std::getline(ifs, pSpecs->hwrev);
+    std::getline(ifs, pSpecs->hwrev.value);
+    pSpecs->hwrev.enabled = true;
 
     // Firmware Revision
     ifs = std::ifstream(devicePath + "/fwrev");
     if (ifs.is_open() != true)
     {
         LOG_EVENT(LOG_ERR, "Failed to get Firmware Revision");
-        exit(EXIT_FAILURE);
+        return false; // failure
     }
-    std::getline(ifs, pSpecs->fwrev);
+    std::getline(ifs, pSpecs->fwrev.value);
+    pSpecs->fwrev.enabled = true;
 
     // Serial number
     ifs = std::ifstream(devicePath + "/serial");
     if (ifs.is_open() != true)
     {
         LOG_EVENT(LOG_ERR, "Failed to get device Serial Number");
-        exit(EXIT_FAILURE);
+        return false; // failure
     }
-    std::getline(ifs, pSpecs->serial);
+    std::getline(ifs, pSpecs->serial.value);
+    pSpecs->serial.enabled = true;
 
     // Manufacturing Date
     ifs = std::ifstream(devicePath + "/date");
     if (ifs.is_open() != true)
     {
         LOG_EVENT(LOG_ERR, "Failed to get device Manufacturing Date");
-        exit(EXIT_FAILURE);
+        return false; // failure
     }
-    std::getline(ifs, pSpecs->mdt);
+    std::getline(ifs, pSpecs->mdt.value);
+    pSpecs->mdt.enabled = true;
 
     ifs.close();
+    return true; // success
+}
+
+bool cStatReader::getSerialNumberFallback(
+    std::string deviceName, struct sDeviceSpecs* pSpecs)
+{
+    FILE* pFile;
+    char output = 0;
+
+    std::string command = "lsblk --raw -n -o serial /dev/" + deviceName + " -a";
+
+    pFile = (FILE*)popen(command.c_str(), "r");
+    if (0 == pFile)
+    {
+        LOG_EVENT(LOG_ERR, "Failed to open pFile, ", strerror(errno));
+        return false; // failure
+    }
+
+    while (fread(&output, sizeof output, 1, pFile))
+    {
+        // only first line of lsblk output is relevant
+        if (output == '\n')
+        {
+            break;
+        }
+        pSpecs->serial.value.push_back(output);
+    }
+    pSpecs->serial.enabled = true;
+
+    if (pclose(pFile))
+    {
+        LOG_EVENT(LOG_ERR, "Failed to close pFile, ", strerror(errno));
+        return false; // failure
+    }
+
+    return true; // success
 }
