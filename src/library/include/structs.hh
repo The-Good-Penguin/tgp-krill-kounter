@@ -4,6 +4,12 @@
 
 #include <string>
 
+struct sBlockStatStub
+{
+        std::string value;
+        bool enabled = false;
+};
+
 struct sBlockStats
 {
         int readIo;
@@ -25,13 +31,13 @@ struct sBlockStats
 
 struct sDeviceSpecs
 {
-        std::string manfid;
-        std::string oemid;
-        std::string name;
-        std::string hwrev;
-        std::string fwrev;
-        std::string serial;
-        std::string mdt;
+        struct sBlockStatStub manfid;
+        struct sBlockStatStub oemid;
+        struct sBlockStatStub name;
+        struct sBlockStatStub hwrev;
+        struct sBlockStatStub fwrev;
+        struct sBlockStatStub serial;
+        struct sBlockStatStub mdt;
 };
 
 struct jsonDeviceEntry
