@@ -1,44 +1,44 @@
 {
     "123abc": {
-        "previous_path": "/dev/XXX",
-        "previous_stats": {
-            "read_io": 0,
-            "read_merges": 0,
-            "read_sectors": 0,
-            "read_ticks": 0,
-            "write_io": 0,
-            "write_merges": 0,
-            "write_sectors": 0,
-            "write_ticks": 0,
-            "in_flight": 0,
-            "io_ticks": 0,
-            "time_in_queue": 0,
-            "discard_io": 0,
-            "discard_merges": 0,
-            "discard_sectors": 0,
-            "discard_ticks": 0
+        "previousPath": "/dev/XXX",
+        "previousStats": {
+            "readIo": 0,
+            "readMerges": 0,
+            "readSectors": 0,
+            "readTicks": 0,
+            "writeIo": 0,
+            "writeMerges": 0,
+            "writeSectors": 0,
+            "writeTicks": 0,
+            "inFlight": 0,
+            "ioTicks": 0,
+            "timeInQueue": 0,
+            "discardIo": 0,
+            "discardMerges": 0,
+            "discardSectors": 0,
+            "discardTicks": 0
         },
-        "total_bytes_written": 123
+        "totalBytesWritten": 123
     },
     "456def": {
-        "previous_path": "/dev/YYY",
-        "previous_stats": {
-            "read_io": 1,
-            "read_merges": 1,
-            "read_sectors": 1,
-            "read_ticks": 1,
-            "write_io": 1,
-            "write_merges": 1,
-            "write_sectors": 1,
-            "write_ticks": 1,
-            "in_flight": 1,
-            "io_ticks": 1,
-            "time_in_queue": 1,
-            "discard_io": 1,
-            "discard_merges": 1,
-            "discard_sectors": 1,
-            "discard_ticks": 1
+        "previousPath": "/dev/YYY",
+        "previousStats": {
+            "readIo": 1,
+            "readMerges": 1,
+            "readSectors": 1,
+            "readTicks": 1,
+            "writeIo": 1,
+            "writeMerges": 1,
+            "writeSectors": 1,
+            "writeTicks": 1,
+            "inFlight": 1,
+            "ioTicks": 1,
+            "timeInQueue": 1,
+            "discardIo": 1,
+            "discardMerges": 1,
+            "discardSectors": 1,
+            "discardTicks": 1
         },
-        "total_bytes_written": 456
+        "totalBytesWritten": 456
     }
 }
