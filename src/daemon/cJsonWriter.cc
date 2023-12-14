@@ -190,7 +190,7 @@ void cJsonWriter::addEntryToBuilder(std::string serialNumber,
     json_builder_add_int_value(_pJsonBuilder, pStats->discardTicks);
     // - totalBytesWritten
     json_builder_end_object(_pJsonBuilder);
-    json_builder_set_member_name(_pJsonBuilder, "total_bytes_written");
+    json_builder_set_member_name(_pJsonBuilder, "totalBytesWritten");
     json_builder_add_int_value(_pJsonBuilder, totalBytesWritten);
     // close
     json_builder_end_object(_pJsonBuilder);

@@ -56,13 +56,13 @@ bool cJsonParser::getTotalBytesWritten(std::string serialNumber, double* pValue)
     }
 
     json_reader_read_member(pReader, serialNumber.c_str());
-    json_reader_read_member(pReader, "total_bytes_written");
+    json_reader_read_member(pReader, "totalBytesWritten");
     double output = (double)json_reader_get_double_value(pReader);
 
     pError = (GError*)json_reader_get_error(pReader);
     if (pError)
     {
-        LOG_EVENT(LOG_ERR, "Unable to parse 'total_bytes_written': %s\n",
+        LOG_EVENT(LOG_ERR, "Unable to parse 'totalBytesWritten': %s\n",
             pError->message);
         g_error_free(pError);
         return false; // failure
@@ -87,66 +87,66 @@ bool cJsonParser::getStats(std::string serialNumber, struct sBlockStats* pStats)
     }
 
     json_reader_read_member(pReader, serialNumber.c_str());
-    json_reader_read_member(pReader, "previous_stats");
+    json_reader_read_member(pReader, "previousStats");
 
     int numErrors = 0;
-    if (!getValueAsInt(pReader, "read_io", &pStats->readIo))
+    if (!getValueAsInt(pReader, "readIo", &pStats->readIo))
     {
         numErrors++;
     }
-    if (!getValueAsInt(pReader, "read_merges", &pStats->readMerges))
+    if (!getValueAsInt(pReader, "readMerges", &pStats->readMerges))
     {
         numErrors++;
     }
-    if (!getValueAsInt(pReader, "read_sectors", &pStats->readSectors))
+    if (!getValueAsInt(pReader, "readSectors", &pStats->readSectors))
     {
         numErrors++;
     }
-    if (!getValueAsInt(pReader, "read_ticks", &pStats->readTicks))
+    if (!getValueAsInt(pReader, "readTicks", &pStats->readTicks))
     {
         numErrors++;
     }
-    if (!getValueAsInt(pReader, "write_io", &pStats->writeIo))
+    if (!getValueAsInt(pReader, "writeIo", &pStats->writeIo))
     {
         numErrors++;
     }
-    if (!getValueAsInt(pReader, "write_merges", &pStats->writeMerges))
+    if (!getValueAsInt(pReader, "writeMerges", &pStats->writeMerges))
     {
         numErrors++;
     }
-    if (!getValueAsInt(pReader, "write_sectors", &pStats->writeSectors))
+    if (!getValueAsInt(pReader, "writeSectors", &pStats->writeSectors))
     {
         numErrors++;
     }
-    if (!getValueAsInt(pReader, "write_ticks", &pStats->writeTicks))
+    if (!getValueAsInt(pReader, "writeTicks", &pStats->writeTicks))
     {
         numErrors++;
     }
-    if (!getValueAsInt(pReader, "in_flight", &pStats->inFlight))
+    if (!getValueAsInt(pReader, "inFlight", &pStats->inFlight))
     {
         numErrors++;
     }
-    if (!getValueAsInt(pReader, "io_ticks", &pStats->ioTicks))
+    if (!getValueAsInt(pReader, "ioTicks", &pStats->ioTicks))
     {
         numErrors++;
     }
-    if (!getValueAsInt(pReader, "time_in_queue", &pStats->timeInQueue))
+    if (!getValueAsInt(pReader, "timeInQueue", &pStats->timeInQueue))
     {
         numErrors++;
     }
-    if (!getValueAsInt(pReader, "discard_io", &pStats->discardIo))
+    if (!getValueAsInt(pReader, "discardIo", &pStats->discardIo))
     {
         numErrors++;
     }
-    if (!getValueAsInt(pReader, "discard_merges", &pStats->discardMerges))
+    if (!getValueAsInt(pReader, "discardMerges", &pStats->discardMerges))
     {
         numErrors++;
     }
-    if (!getValueAsInt(pReader, "discard_sectors", &pStats->discardSectors))
+    if (!getValueAsInt(pReader, "discardSectors", &pStats->discardSectors))
     {
         numErrors++;
     }
-    if (!getValueAsInt(pReader, "discard_ticks", &pStats->discardTicks))
+    if (!getValueAsInt(pReader, "discardTicks", &pStats->discardTicks))
     {
         numErrors++;
     }
@@ -168,7 +168,7 @@ bool cJsonParser::getPath(std::string serialNumber, std::string* pValue)
     }
 
     json_reader_read_member(pReader, serialNumber.c_str());
-    json_reader_read_member(pReader, "previous_path");
+    json_reader_read_member(pReader, "previousPath");
     std::string output = (std::string)json_reader_get_string_value(pReader);
 
     pError = (GError*)json_reader_get_error(pReader);
