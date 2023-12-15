@@ -4,6 +4,7 @@
 
 #include "include/structs.hh"
 
+#include <cstdint>
 #include <string>
 
 class cStatComputer
