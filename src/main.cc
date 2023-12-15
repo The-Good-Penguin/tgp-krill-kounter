@@ -20,6 +20,9 @@ cStatReader reader;
 cStatComputer computer;
 struct jsonDeviceEntry targetDevice;
 
+// converts the update rate to milliseconds
+constexpr int CONST_RATE_TO_MILLISECONDS = 1000;
+
 // glib variables
 GError* pError           = nullptr;
 GOptionContext* pContext = nullptr;
@@ -206,7 +209,7 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    timeoutId = g_timeout_add(updateRate, updateStats, pLoop);
+    timeoutId = g_timeout_add(updateRate * CONST_RATE_TO_MILLISECONDS, updateStats, pLoop);
     g_main_loop_run(pLoop);
 
     return EXIT_SUCCESS;
