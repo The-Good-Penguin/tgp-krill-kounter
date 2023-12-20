@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <filesystem>
 #include <glib.h>
 #include <iostream>
 #include <json-glib/json-glib.h>
@@ -73,47 +74,53 @@ void getSerialNumber(void)
 
 void parseFile(void)
 {
-    if (!parser.openJson(statsFilePath))
+    // Check if file exists
+    const std::filesystem::path statsFile = (statsFilePath);
+    if (std::filesystem::exists(statsFile))
     {
-        LOG_EVENT(LOG_ERR, "Unable to open stats file\n");
-        exit(EXIT_FAILURE);
-    }
+        if (!parser.openJson(statsFilePath))
+        {
+            LOG_EVENT(LOG_ERR, "Unable to open stats file\n");
+            exit(EXIT_FAILURE);
+        }
 
-    // does entry for device already exist?
-    std::vector<std::string> serialNumbers;
-    if (!parser.getSerialNumbers(&serialNumbers))
-    {
-        LOG_EVENT(
-            LOG_ERR, "Unable to retrieve serial numbers from json file\n");
-        exit(EXIT_FAILURE);
-    }
-    if (std::find(serialNumbers.begin(), serialNumbers.end(),
-            targetDevice.serialNumber)
-        != serialNumbers.end())
-    {
-        // device exists in json already
-        if (!parser.getPath(
-                targetDevice.serialNumber, &targetDevice.previousPath))
+        // does entry for device already exist?
+        std::vector<std::string> serialNumbers;
+        if (!parser.getSerialNumbers(&serialNumbers))
         {
-            LOG_EVENT(LOG_ERR, "Unable to read previousPath\n");
+            LOG_EVENT(
+                LOG_ERR, "Unable to retrieve serial numbers from json file\n");
             exit(EXIT_FAILURE);
         }
-        if (!parser.getStats(targetDevice.serialNumber, &targetDevice.stats))
+        if (std::find(serialNumbers.begin(), serialNumbers.end(),
+                targetDevice.serialNumber)
+            != serialNumbers.end())
         {
-            LOG_EVENT(LOG_ERR, "Unable to read device stats\n");
-            exit(EXIT_FAILURE);
+            // device exists in json already
+            if (!parser.getPath(
+                    targetDevice.serialNumber, &targetDevice.previousPath))
+            {
+                LOG_EVENT(LOG_ERR, "Unable to read previousPath\n");
+                exit(EXIT_FAILURE);
+            }
+            if (!parser.getStats(
+                    targetDevice.serialNumber, &targetDevice.stats))
+            {
+                LOG_EVENT(LOG_ERR, "Unable to read device stats\n");
+                exit(EXIT_FAILURE);
+            }
+            if (!parser.getTotalBytesWritten(
+                    targetDevice.serialNumber, &targetDevice.totalBytesWritten))
+            {
+                LOG_EVENT(LOG_ERR, "Unable to read totalBytesWritten\n");
+                exit(EXIT_FAILURE);
+            }
         }
-        if (!parser.getTotalBytesWritten(
-                targetDevice.serialNumber, &targetDevice.totalBytesWritten))
+        else
         {
-            LOG_EVENT(LOG_ERR, "Unable to read totalBytesWritten\n");
-            exit(EXIT_FAILURE);
+            // no existing device data in json
+            targetDevice.previousPath = devicePath;
         }
-    }
-    else
-    {
-        // no existing device data in json
-        targetDevice.previousPath = devicePath;
     }
 }
 
