@@ -158,7 +158,10 @@ gboolean updateStats(gpointer data)
 
 void onExit(void)
 {
-    g_source_remove(timeoutId);
+    if (timeoutId)
+    {
+        g_source_remove(timeoutId);
+    }
     if (pLoop)
     {
         g_main_loop_unref(pLoop);
@@ -170,7 +173,7 @@ void onExit(void)
     }
     if (pContext)
     {
-        g_object_unref(pContext);
+        g_option_context_free(pContext);
     }
     LogEventDeinit();
 }
