@@ -10,7 +10,6 @@ find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 
 pkg_check_modules(JSONGLIB REQUIRED json-glib-1.0)
-pkg_check_modules(SIGNALCPP REQUIRED sigc++-3.0)
 
 # Testing
 include(CTest)
@@ -28,7 +27,6 @@ add_executable(KrillKounter src/main.cc ${sources})
 
 # Include directories
 include_directories(${JSONGLIB_INCLUDE_DIRS})
-include_directories(${SIGNALCPP_INCLUDE_DIRS})
 
 target_include_directories(KrillKounter PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -36,8 +34,6 @@ target_include_directories(KrillKounter PUBLIC
 
 # Link libraries
 target_link_libraries(KrillKounter PUBLIC ${JSONGLIB_LIBRARIES})
-
-target_link_libraries(KrillKounter PUBLIC ${SIGNALCPP_LIBRARIES})
 
 target_link_libraries(KrillKounter PUBLIC ${CMAKE_DL_LIBS})
 

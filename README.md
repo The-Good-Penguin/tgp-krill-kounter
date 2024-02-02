@@ -8,7 +8,6 @@ A utility for monitoring and logging block device stats to a JSON file at a regu
 - make-4.3
 - cmake-3.22.1
 - libjson-glib-dev-1.6.6
-- libsigc++-3.0-dev
 - lsblk-2.37.2
 
 # Compilation
