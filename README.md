@@ -32,7 +32,7 @@ KK_UPDATE_RATE - Time interval to wait between JSON file updates, in seconds.
 KK_SECTOR_SIZE - Sector size used by the target block device, in bytes.
 ```
 
-4. Start the KrillKounter systemd service using the following command `systemctl start KrillKounter.service`. The state of the KrillKounter service can be monitored using the command `systemctl status KrillKounter`.
+4. Enable and start the KrillKounter systemd service using the following command `systemctl enable --now KrillKounter.service`. The state of the KrillKounter service can be monitored using the command `systemctl status KrillKounter`.
 
 # Contributing
 Issue a PR and follow the guidelines outlined in the CodingStyle.md
