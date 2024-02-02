@@ -49,5 +49,6 @@ set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
 
+install(DIRECTORY DESTINATION  /usr/share/KrillKounter)
 install(TARGETS KrillKounter RUNTIME DESTINATION /usr/bin)
 install(FILES src/daemon/service/KrillKounter.service DESTINATION /lib/systemd/system)
