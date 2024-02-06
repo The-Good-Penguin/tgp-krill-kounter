@@ -234,7 +234,7 @@ bool cStatReader::getSerialNumberFallback(
     pFile = (FILE*)popen(command.c_str(), "r");
     if (0 == pFile)
     {
-        LOG_EVENT(LOG_ERR, "Failed to open pFile, ", strerror(errno));
+        LOG_EVENT(LOG_ERR, "Failed to open pFile, %s", strerror(errno));
         return false; // failure
     }
 
@@ -251,7 +251,7 @@ bool cStatReader::getSerialNumberFallback(
 
     if (pclose(pFile))
     {
-        LOG_EVENT(LOG_ERR, "Failed to close pFile, ", strerror(errno));
+        LOG_EVENT(LOG_ERR, "Failed to close pFile, %s", strerror(errno));
         return false; // failure
     }
 
