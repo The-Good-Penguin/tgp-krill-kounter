@@ -4,6 +4,7 @@
 #include <iostream>
 #include <json-glib/json-glib.h>
 #include <string>
+#include <sys/stat.h>
 
 #include "daemon/cJsonParser.hh"
 #include "daemon/cJsonWriter.hh"
@@ -156,6 +157,40 @@ gboolean updateStats(gpointer data)
     return TRUE;
 }
 
+gboolean checkStatsFilePath()
+{
+    struct stat dirStats{};
+    FILE *pFile;
+
+    LOG_EVENT(LOG_INFO, "Checking stats path [%s]\n", statsFilePath.c_str());
+    /* if the file is in the root directory or has no directory */
+    auto ret = statsFilePath.find_last_of('/');
+    if (ret == 0 || ret == std::string::npos)
+        return true; // success
+
+    auto const statsDirectory = statsFilePath.substr(0, ret);
+    if (stat(statsDirectory.c_str(), &dirStats) != 0) {
+        std::string command = "mkdir -p " + statsDirectory;
+        pFile = popen(command.c_str(), "r");
+        if (nullptr == pFile)
+        {
+            LOG_EVENT(LOG_ERR, "Failed to open pFile, %s", strerror(errno));
+            return false; // failure
+        }
+
+        if (pclose(pFile))
+        {
+            LOG_EVENT(LOG_ERR, "Failed to close pFile, %s", strerror(errno));
+            return false; // failure
+        }
+    } else if (!S_ISDIR(dirStats.st_mode)) {
+        LOG_EVENT(LOG_ERR, "Error, [%s] exists and is not a directory\n", statsDirectory.c_str());
+        return false; // failure
+    }
+    LOG_EVENT(LOG_INFO, "[%s] already exists and is a directory\n", statsDirectory.c_str());
+    return true; // success
+}
+
 void onExit(void)
 {
     if (timeoutId)
@@ -205,6 +240,9 @@ int main(int argc, char* argv[])
     statsFilePath = (std::string)statsFilePath.c_str();
     deviceName    = (std::string)deviceName.c_str();
     devicePath    = (std::string)devicePath.c_str();
+
+    if (checkStatsFilePath() == false)
+        exit(EXIT_FAILURE);
 
     getSerialNumber();
 
