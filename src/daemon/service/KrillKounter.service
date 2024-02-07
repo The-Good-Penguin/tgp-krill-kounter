@@ -3,6 +3,9 @@ Description=Start KrillKounter daemon
 
 [Service]
 Type=simple
+Restart=on-failure
+RestartSec=5s
+
 Environment=KK_STATS_PATH=/usr/share/KrillKounter/stats.json
 Environment=KK_DEVICE_PATH=/dev/sda
 Environment=KK_DEVICE_NAME=sda
