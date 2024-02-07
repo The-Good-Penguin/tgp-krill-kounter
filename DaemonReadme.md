@@ -23,7 +23,7 @@ Returns: *bool*
 
 *std::string serialNumber*
 
-*double\* pValue*
+*int\* pValue*
 
 Retreive the `totalBytesWritten` value in the entry with the key *serialNumber* from the JSON file previously opened with `openJson`. The value of `totalBytesWritten` is written to *pValue*. Returns `true` on success, `false` on failure.
 

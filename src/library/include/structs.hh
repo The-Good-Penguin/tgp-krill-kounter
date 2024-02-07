@@ -2,6 +2,7 @@
 #ifndef _STRUCTS_H
 #define _STRUCTS_H
 
+#include <glib.h>
 #include <string>
 
 struct sBlockStatStub
@@ -12,21 +13,21 @@ struct sBlockStatStub
 
 struct sBlockStats
 {
-        int readIo;
-        int readMerges;
-        int readSectors;
-        int readTicks;
-        int writeIo;
-        int writeMerges;
-        int writeSectors;
-        int writeTicks;
-        int inFlight;
-        int ioTicks;
-        int timeInQueue;
-        int discardIo;
-        int discardMerges;
-        int discardSectors;
-        int discardTicks;
+        gint64 readIo;
+        gint64 readMerges;
+        gint64 readSectors;
+        gint64 readTicks;
+        gint64 writeIo;
+        gint64 writeMerges;
+        gint64 writeSectors;
+        gint64 writeTicks;
+        gint64 inFlight;
+        gint64 ioTicks;
+        gint64 timeInQueue;
+        gint64 discardIo;
+        gint64 discardMerges;
+        gint64 discardSectors;
+        gint64 discardTicks;
 };
 
 struct sDeviceSpecs
@@ -45,7 +46,7 @@ struct jsonDeviceEntry
         std::string serialNumber;
         std::string previousPath;
         struct sBlockStats stats;
-        double totalBytesWritten;
+        gint64 totalBytesWritten;
 };
 
 #endif /* _STRUCTS_H */

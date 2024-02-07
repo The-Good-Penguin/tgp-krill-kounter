@@ -12,14 +12,14 @@ class cJsonParser
     public:
         bool openJson(std::string jsonPath);
         bool closeJson();
-        bool getTotalBytesWritten(std::string serialNumber, double* pValue);
+        bool getTotalBytesWritten(std::string serialNumber, gint64* pValue);
         bool getStats(std::string serialNumber, struct sBlockStats* pStats);
         bool getPath(std::string serialNumber, std::string* pValue);
         bool getSerialNumbers(std::vector<std::string>* pValue);
 
     private:
         bool getValueAsInt(
-            JsonReader* pReader, std::string itemName, int* pValue);
+            JsonReader* pReader, std::string itemName, gint64 * pValue);
         JsonParser* _pJsonParser;
         int _parserOpen = false;
 };

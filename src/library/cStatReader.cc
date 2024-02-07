@@ -79,21 +79,24 @@ bool cStatReader::getStats(std::string deviceName, struct sBlockStats* pStats)
         // loop for each string and add to the vector
         vec.push_back(s);
 
-    pStats->readIo         = std::stoi(vec[0]);
-    pStats->readMerges     = std::stoi(vec[1]);
-    pStats->readSectors    = std::stoi(vec[2]);
-    pStats->readTicks      = std::stoi(vec[3]);
-    pStats->writeIo        = std::stoi(vec[4]);
-    pStats->writeMerges    = std::stoi(vec[5]);
-    pStats->writeSectors   = std::stoi(vec[6]);
-    pStats->writeTicks     = std::stoi(vec[7]);
-    pStats->inFlight       = std::stoi(vec[8]);
-    pStats->ioTicks        = std::stoi(vec[9]);
-    pStats->timeInQueue    = std::stoi(vec[10]);
-    pStats->discardIo      = std::stoi(vec[11]);
-    pStats->discardMerges  = std::stoi(vec[12]);
-    pStats->discardSectors = std::stoi(vec[13]);
-    pStats->discardTicks   = std::stoi(vec[14]);
+    pStats->readIo         = (gint64) std::stoul(vec[0]);
+    pStats->readMerges     = (gint64) std::stoul(vec[1]);
+    pStats->readSectors    = (gint64) std::stoul(vec[2]);
+    pStats->readTicks      = (gint64) std::stoi(vec[3]);
+
+    pStats->writeIo        = (gint64) std::stoul(vec[4]);
+    pStats->writeMerges    = (gint64) std::stoul(vec[5]);
+    pStats->writeSectors   = (gint64) std::stoul(vec[6]);
+    pStats->writeTicks     = (gint64) std::stoi(vec[7]);
+
+    pStats->inFlight       = (gint64) std::stoi(vec[8]);
+    pStats->ioTicks        = (gint64) std::stoi(vec[9]);
+    pStats->timeInQueue    = (gint64) std::stoi(vec[10]);
+
+    pStats->discardIo      = (gint64) std::stoul(vec[11]);
+    pStats->discardMerges  = (gint64) std::stoul(vec[12]);
+    pStats->discardSectors = (gint64) std::stoul(vec[13]);
+    pStats->discardTicks   = (gint64) std::stoi(vec[14]);
 
     return true; // success
 }
