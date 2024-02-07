@@ -12,8 +12,8 @@ class cStatComputer
     public:
         uint getAverageWriteSize(
             struct sBlockStats* pDeviceStats, uint sectorSize);
-        float totalBytesWritten(uint sectorSize, uintmax_t currentWriteSectors,
-            uintmax_t previousWriteSectors, float previousTotal);
+        gint64 totalBytesWritten(uint sectorSize, gint64 currentWriteSectors,
+            gint64 previousWriteSectors, gint64 previousTotal);
 };
 
 #endif /* _CSTATCOMPUTER_H */

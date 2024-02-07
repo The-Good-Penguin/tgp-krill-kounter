@@ -7,11 +7,11 @@ uint cStatComputer::getAverageWriteSize(
     return (sectorSize * pDeviceStats->writeSectors) / pDeviceStats->writeIo;
 }
 
-float cStatComputer::totalBytesWritten(uint sectorSize,
-    uintmax_t currentWriteSectors, uintmax_t previousWriteSectors,
-    float previousTotal)
+gint64 cStatComputer::totalBytesWritten(uint sectorSize,
+    gint64 currentWriteSectors, gint64 previousWriteSectors,
+    gint64 previousTotal)
 {
-    uintmax_t newTotal = previousTotal;
+    gint64 newTotal = previousTotal;
     if (currentWriteSectors < previousWriteSectors)
     {
         /* overflow occured, calculate difference:

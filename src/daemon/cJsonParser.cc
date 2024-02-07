@@ -43,7 +43,7 @@ bool cJsonParser::closeJson()
     return true; // success
 }
 
-bool cJsonParser::getTotalBytesWritten(std::string serialNumber, double* pValue)
+bool cJsonParser::getTotalBytesWritten(std::string serialNumber, gint64 *pValue)
 {
     GError* pError      = nullptr;
     JsonReader* pReader = json_reader_new(json_parser_get_root(_pJsonParser));
@@ -57,7 +57,7 @@ bool cJsonParser::getTotalBytesWritten(std::string serialNumber, double* pValue)
 
     json_reader_read_member(pReader, serialNumber.c_str());
     json_reader_read_member(pReader, "totalBytesWritten");
-    double output = (double)json_reader_get_double_value(pReader);
+    auto output = json_reader_get_int_value(pReader);
 
     pError = (GError*)json_reader_get_error(pReader);
     if (pError)
@@ -210,7 +210,7 @@ bool cJsonParser::getSerialNumbers(std::vector<std::string>* pValue)
 // private function
 
 bool cJsonParser::getValueAsInt(
-    JsonReader* pReader, std::string itemName, int* pValue)
+    JsonReader* pReader, std::string itemName, gint64* pValue)
 {
     json_reader_read_member(pReader, itemName.c_str());
     int value = (int)json_reader_get_int_value(pReader);
