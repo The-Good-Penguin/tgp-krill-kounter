@@ -219,7 +219,7 @@ bool cJsonParser::getValueAsInt(
     if (pError)
     {
         LOG_EVENT(
-            LOG_ERR, "Unable to parse '%s': %s\n", itemName, pError->message);
+            LOG_ERR, "Unable to parse '%s': %s\n", itemName.c_str(), pError->message);
         g_error_free(pError);
         return false; // failure
     }
