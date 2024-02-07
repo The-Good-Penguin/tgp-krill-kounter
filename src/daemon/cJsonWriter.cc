@@ -13,7 +13,7 @@ cJsonWriter::cJsonWriter() { _pJsonBuilder = json_builder_new(); }
 bool cJsonWriter::writeJson(std::string jsonPathInput,
     std::string jsonPathOutput, std::string serialNumber,
     std::string previousPath, struct sBlockStats* pStats,
-    uintmax_t totalBytesWritten)
+    gint64 diskSeq, gint64 totalBytesWritten)
 {
     json_builder_begin_object(_pJsonBuilder);
 
@@ -34,7 +34,7 @@ bool cJsonWriter::writeJson(std::string jsonPathInput,
         for (uint i = 0; i < devices.size(); i++)
         {
             addEntryToBuilder(devices[i].serialNumber, devices[i].previousPath,
-                &(devices[i].stats), devices[i].totalBytesWritten);
+                &(devices[i].stats), devices[i].diskSeq, devices[i].totalBytesWritten);
         }
 
         f.close();
@@ -47,7 +47,7 @@ bool cJsonWriter::writeJson(std::string jsonPathInput,
     via addEntryToBuilder() above, then the values for that entry will be
     overwritten here before any json is generated or written back to disk.
     */
-    addEntryToBuilder(serialNumber, previousPath, pStats, totalBytesWritten);
+    addEntryToBuilder(serialNumber, previousPath, pStats, diskSeq, totalBytesWritten);
 
     json_builder_end_object(_pJsonBuilder);
 
@@ -132,7 +132,7 @@ bool cJsonWriter::readExistingJson(
 
 void cJsonWriter::addEntryToBuilder(std::string serialNumber,
     std::string previousPath, struct sBlockStats* pStats,
-    uintmax_t totalBytesWritten)
+    gint64 diskSeq, gint64 totalBytesWritten)
 {
     // serial number
     json_builder_set_member_name(_pJsonBuilder, serialNumber.c_str());
@@ -190,6 +190,8 @@ void cJsonWriter::addEntryToBuilder(std::string serialNumber,
     json_builder_add_int_value(_pJsonBuilder, pStats->discardTicks);
     // - totalBytesWritten
     json_builder_end_object(_pJsonBuilder);
+    json_builder_set_member_name(_pJsonBuilder, "diskSeq");
+    json_builder_add_int_value(_pJsonBuilder, diskSeq);
     json_builder_set_member_name(_pJsonBuilder, "totalBytesWritten");
     json_builder_add_int_value(_pJsonBuilder, totalBytesWritten);
     // close

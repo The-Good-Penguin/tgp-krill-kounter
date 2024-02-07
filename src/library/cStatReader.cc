@@ -52,6 +52,29 @@ bool cStatReader::getSpaceInfo(std::string deviceName, uintmax_t* pValue)
     return true; // success
 }
 
+bool cStatReader::getDiskSeq(std::string deviceName, gint64* pSeq)
+{
+    // get /sys/block/<dev>/stat
+    auto ifs = std::ifstream("/sys/block/" + deviceName + "/diskseq");
+    if (ifs.is_open() != true)
+    {
+        LOG_EVENT(LOG_ERR, "Failed to get device events");
+        return false; // failure
+    }
+    std::string line;
+    std::getline(ifs, line);
+
+    if (line.empty())
+    {
+        LOG_EVENT(LOG_ERR, "Device does not exist");
+        return false; // failure
+    }
+
+
+    *pSeq = (gint64) std::stoul(line);
+    return *pSeq > 1;
+}
+
 bool cStatReader::getStats(std::string deviceName, struct sBlockStats* pStats)
 {
     // get /sys/block/<dev>/stat

@@ -13,6 +13,7 @@ class cJsonParser
         bool openJson(std::string jsonPath);
         bool closeJson();
         bool getTotalBytesWritten(std::string serialNumber, gint64* pValue);
+        bool getDiskSeq(std::string serialNumber, gint64* pValue);
         bool getStats(std::string serialNumber, struct sBlockStats* pStats);
         bool getPath(std::string serialNumber, std::string* pValue);
         bool getSerialNumbers(std::vector<std::string>* pValue);

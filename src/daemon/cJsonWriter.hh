@@ -14,7 +14,7 @@ class cJsonWriter
         cJsonWriter();
         bool writeJson(std::string jsonPathInput, std::string jsonPathOutput,
             std::string serialNumber, std::string previousPath,
-            struct sBlockStats* pStats, uintmax_t totalBytesWritten);
+            struct sBlockStats* pStats, gint64 diskSeq, gint64 totalBytesWritten);
 
     private:
         uint _indentLevel = 4;
@@ -23,7 +23,7 @@ class cJsonWriter
             std::vector<struct jsonDeviceEntry>* pDevices);
         void addEntryToBuilder(std::string serialNumber,
             std::string previousPath, struct sBlockStats* pStats,
-            uintmax_t totalBytesWritten);
+            gint64 diskSeq, gint64 totalBytesWritten);
 };
 
 #endif /* _CJSONWRITER_H */
