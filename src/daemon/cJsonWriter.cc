@@ -26,7 +26,7 @@ bool cJsonWriter::writeJson(std::string jsonPathInput,
         if (!readExistingJson(jsonPathInput, &devices))
         {
             LOG_EVENT(LOG_ERR, "Unable to read existing json file: %s\n",
-                jsonPathInput);
+                jsonPathInput.c_str());
             return false; // failure
         }
 
@@ -69,7 +69,7 @@ bool cJsonWriter::writeJson(std::string jsonPathInput,
     if (pError)
     {
         LOG_EVENT(LOG_ERR, "Unable to write json to file [%s]: %s\n",
-            jsonPathOutput, pError->message);
+            jsonPathOutput.c_str(), pError->message);
         g_error_free(pError);
         g_object_unref(pGen);
         json_builder_reset(_pJsonBuilder);
@@ -92,7 +92,7 @@ bool cJsonWriter::readExistingJson(
     cJsonParser parser;
     if (!parser.openJson(jsonPath))
     {
-        LOG_EVENT(LOG_ERR, "Unable to open json file: %s\n", jsonPath);
+        LOG_EVENT(LOG_ERR, "Unable to open json file: %s\n", jsonPath.c_str());
         return false; // failure
     }
 
@@ -119,7 +119,7 @@ bool cJsonWriter::readExistingJson(
         if (error)
         {
             LOG_EVENT(LOG_ERR, "Unable to parse serial number: %s\n",
-                serialNumbers[i]);
+                serialNumbers[i].c_str());
             break;
         }
         pDevices->push_back(device);

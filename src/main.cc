@@ -131,7 +131,7 @@ void parseFile(void)
 gboolean updateStats(gpointer data)
 {
     LOG_EVENT(LOG_INFO, "Updating device stats for [%s]\n",
-        targetDevice.serialNumber);
+        targetDevice.serialNumber.c_str());
 
     int previousWriteSectors = targetDevice.stats.writeSectors;
 
