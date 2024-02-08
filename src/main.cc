@@ -168,6 +168,10 @@ gboolean updateStats(gpointer data)
         exit(EXIT_FAILURE);
     }
 
+    // return if the stats haven't changed
+    if (targetDevice.stats == previousStats)
+        return TRUE;
+
     computer.updateStats(&previousStats,
         &targetDevice.stats, &targetDevice.outputStats);
 

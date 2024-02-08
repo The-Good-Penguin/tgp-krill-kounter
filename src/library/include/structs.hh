@@ -28,6 +28,17 @@ struct sBlockStats
         gint64 discardMerges;
         gint64 discardSectors;
         gint64 discardTicks;
+
+        inline bool operator == (struct sBlockStats a) const {
+            return a.readIo == readIo && a.readMerges == readMerges &&
+                a.readSectors == readSectors && a.readTicks == readTicks &&
+                a.writeIo == writeIo && a.writeMerges == writeMerges &&
+                a.writeSectors == writeSectors && a.writeTicks == writeTicks &&
+                a.inFlight == inFlight && a.ioTicks == ioTicks &&
+                a.timeInQueue == timeInQueue && a.discardIo == discardIo &&
+                a.discardMerges == discardMerges && a.discardSectors == discardSectors &&
+                a.discardTicks == discardTicks;
+        }
 };
 
 struct sDeviceSpecs
