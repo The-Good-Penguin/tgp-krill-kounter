@@ -46,7 +46,9 @@ struct jsonDeviceEntry
         std::string serialNumber;
         std::string previousPath;
         struct sBlockStats stats;
+        struct sBlockStats outputStats;
         gint64 totalBytesWritten;
+        gint64 diskSeq;
 };
 
 #endif /* _STRUCTS_H */

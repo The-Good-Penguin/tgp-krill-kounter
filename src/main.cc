@@ -108,11 +108,25 @@ void parseFile(void)
                 exit(EXIT_FAILURE);
             }
             if (!parser.getStats(
-                    targetDevice.serialNumber, &targetDevice.stats))
+                    targetDevice.serialNumber, &targetDevice.outputStats))
             {
                 LOG_EVENT(LOG_ERR, "Unable to read device stats\n");
                 exit(EXIT_FAILURE);
             }
+
+            if (!reader.getStats(deviceName, &targetDevice.stats))
+            {
+                LOG_EVENT(LOG_ERR, "Unable to read device stats\n");
+                exit(EXIT_FAILURE);
+            }
+
+            if (!parser.getDiskSeq(
+                    targetDevice.serialNumber, &targetDevice.diskSeq))
+            {
+                LOG_EVENT(LOG_ERR, "Unable to read disk sequence\n");
+                exit(EXIT_FAILURE);
+            }
+
             if (!parser.getTotalBytesWritten(
                     targetDevice.serialNumber, &targetDevice.totalBytesWritten))
             {
@@ -133,7 +147,19 @@ gboolean updateStats(gpointer data)
     LOG_EVENT(LOG_INFO, "Updating device stats for [%s]\n",
         targetDevice.serialNumber.c_str());
 
-    int previousWriteSectors = targetDevice.stats.writeSectors;
+    auto previousDiskSeq = targetDevice.diskSeq;
+    auto previousStats = targetDevice.stats;
+
+    // get sequence
+    if (!reader.getDiskSeq(deviceName, &targetDevice.diskSeq))
+    {
+        LOG_EVENT(LOG_ERR, "Unable to read device sequence\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // reset previous stats if disk sequence has changed
+    if (targetDevice.diskSeq != previousDiskSeq)
+        previousStats = {};
 
     // get new values
     if (!reader.getStats(deviceName, &targetDevice.stats))
@@ -142,13 +168,17 @@ gboolean updateStats(gpointer data)
         exit(EXIT_FAILURE);
     }
 
+    computer.updateStats(&previousStats,
+        &targetDevice.stats, &targetDevice.outputStats);
+
+
     targetDevice.totalBytesWritten = computer.totalBytesWritten(sectorSize,
-        targetDevice.stats.writeSectors, previousWriteSectors,
+        targetDevice.stats.writeSectors, previousStats.writeSectors,
         targetDevice.totalBytesWritten);
 
     if (!writer.writeJson(statsFilePath, statsFilePath,
-            targetDevice.serialNumber, devicePath, &targetDevice.stats,
-            targetDevice.totalBytesWritten))
+            targetDevice.serialNumber, devicePath, &targetDevice.outputStats,
+            targetDevice.diskSeq ,targetDevice.totalBytesWritten))
     {
         LOG_EVENT(LOG_ERR, "Unable to write device stats to file\n");
         exit(EXIT_FAILURE);

@@ -13,6 +13,7 @@ class cStatReader
         std::vector<std::string> findDevices(void);
         bool getSpaceInfo(std::string deviceName, uintmax_t* pValue);
         bool getStats(std::string deviceName, struct sBlockStats* pStats);
+        bool getDiskSeq(std::string deviceName, gint64* pSeq);
         bool getSpecs(std::string deviceName, struct sDeviceSpecs* pSpecs);
 
     private:

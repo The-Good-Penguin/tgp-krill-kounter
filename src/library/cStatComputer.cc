@@ -32,3 +32,22 @@ gint64 cStatComputer::totalBytesWritten(uint sectorSize,
 
     return newTotal;
 }
+void cStatComputer::updateStats(struct sBlockStats* pPreviousStats,
+    struct sBlockStats* pCurrentStats, struct sBlockStats *pOutputStats)
+{
+    pOutputStats->readIo += pCurrentStats->readIo - pPreviousStats->readIo;
+    pOutputStats->readMerges += pCurrentStats->readMerges - pPreviousStats->readMerges;
+    pOutputStats->readSectors += pCurrentStats->readSectors - pPreviousStats->readSectors;
+    pOutputStats->readTicks += pCurrentStats->readTicks - pPreviousStats->readTicks;
+    pOutputStats->writeIo += pCurrentStats->writeIo - pPreviousStats->writeIo;
+    pOutputStats->writeMerges += pCurrentStats->writeMerges - pPreviousStats->writeMerges;
+    pOutputStats->writeSectors += pCurrentStats->writeSectors - pPreviousStats->writeSectors;
+    pOutputStats->writeTicks += pCurrentStats->writeTicks - pPreviousStats->writeTicks;
+    pOutputStats->inFlight += pCurrentStats->inFlight - pPreviousStats->inFlight;
+    pOutputStats->ioTicks += pCurrentStats->ioTicks - pPreviousStats->ioTicks;
+    pOutputStats->timeInQueue += pCurrentStats->timeInQueue - pPreviousStats->timeInQueue;
+    pOutputStats->discardIo += pCurrentStats->discardIo - pPreviousStats->discardIo;
+    pOutputStats->discardMerges += pCurrentStats->discardMerges - pPreviousStats->discardMerges;
+    pOutputStats->discardSectors += pCurrentStats->discardSectors - pPreviousStats->discardSectors;
+    pOutputStats->discardTicks += pCurrentStats->discardTicks - pPreviousStats->discardTicks;
+}
