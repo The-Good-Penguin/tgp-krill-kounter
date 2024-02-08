@@ -23,7 +23,8 @@ cStatComputer computer;
 struct jsonDeviceEntry targetDevice;
 
 // converts the update rate to milliseconds
-constexpr int CONST_RATE_TO_MILLISECONDS = 1000;
+constexpr int   CONST_RATE_TO_MILLISECONDS   = 1000;
+constexpr uint  CONST_SECTOR_SIZE            = 512;
 
 // glib variables
 GError* pError           = nullptr;
@@ -36,7 +37,6 @@ std::string statsFilePath = "~/.KrillKounter/stats.json";
 std::string deviceName;
 std::string devicePath;
 uint updateRate        = 3600; // seconds
-uint sectorSize        = 512;
 bool printBlockDevices = false;
 
 // cli arguements
@@ -48,8 +48,6 @@ GOptionEntry options[] = { { "stats-file", 's', 0, G_OPTION_ARG_STRING,
         "name of block device" },
     { "update-rate", 'r', 0, G_OPTION_ARG_INT, &updateRate,
         "update rate of checks (seconds)" },
-    { "sector-size", 'b', 0, G_OPTION_ARG_INT, &sectorSize,
-        "sector size of block device" },
     { "print-devices", 'p', 0, G_OPTION_ARG_NONE, &printBlockDevices,
         "print all available block devices" },
     { NULL } };
@@ -176,7 +174,7 @@ gboolean updateStats(gpointer data)
         &targetDevice.stats, &targetDevice.outputStats);
 
 
-    targetDevice.totalBytesWritten = computer.totalBytesWritten(sectorSize,
+    targetDevice.totalBytesWritten = computer.totalBytesWritten(CONST_SECTOR_SIZE,
         targetDevice.stats.writeSectors, previousStats.writeSectors,
         targetDevice.totalBytesWritten);
 

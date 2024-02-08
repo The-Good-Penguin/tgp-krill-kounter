@@ -27,8 +27,6 @@ KK_DEVICE_PATH - Path to the target block device to be monitored by KrillKounter
 KK_DEVICE_NAME - Name of the target block device to be monitored by KrillKounter [e.g. sda]
 
 KK_UPDATE_RATE - Time interval to wait between JSON file updates, in seconds.
-
-KK_SECTOR_SIZE - Sector size used by the target block device, in bytes.
 ```
 
 4. Enable and start the KrillKounter systemd service using the following command `systemctl enable --now KrillKounter.service`. The state of the KrillKounter service can be monitored using the command `systemctl status KrillKounter`.
