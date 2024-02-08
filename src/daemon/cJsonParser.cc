@@ -56,15 +56,35 @@ bool cJsonParser::getTotalBytesWritten(std::string serialNumber, gint64 *pValue)
     }
 
     json_reader_read_member(pReader, serialNumber.c_str());
-    json_reader_read_member(pReader, "totalBytesWritten");
-    auto output = json_reader_get_int_value(pReader);
+    pError = (GError*)json_reader_get_error(pReader);
+    if (pError)
+    {
+        LOG_EVENT(LOG_ERR, "Error parsing 'serialNumber': %s\n",
+            pError->message);
+        json_reader_end_member(pReader);
+        g_object_unref(pReader);
+        return false; // failure
+    }
 
+    json_reader_read_member(pReader, "totalBytesWritten");
+    pError = (GError*)json_reader_get_error(pReader);
+    if (pError)
+    {
+        LOG_EVENT(LOG_ERR, "Error parsing 'totalBytesWritten': %s\n",
+            pError->message);
+        json_reader_end_member(pReader);
+        g_object_unref(pReader);
+        return false; // failure
+    }
+
+    auto output = json_reader_get_int_value(pReader);
     pError = (GError*)json_reader_get_error(pReader);
     if (pError)
     {
         LOG_EVENT(LOG_ERR, "Unable to parse 'totalBytesWritten': %s\n",
             pError->message);
-        g_error_free(pError);
+        json_reader_end_member(pReader);
+        g_object_unref(pReader);
         return false; // failure
     }
 
@@ -93,6 +113,7 @@ bool cJsonParser::getDiskSeq(std::string serialNumber, gint64 *pValue)
         LOG_EVENT(LOG_ERR, "Error parsing 'serialNumber': %s\n",
             pError->message);
         json_reader_end_member(pReader);
+        g_object_unref(pReader);
         return false; // failure
     }
 
@@ -103,6 +124,7 @@ bool cJsonParser::getDiskSeq(std::string serialNumber, gint64 *pValue)
         LOG_EVENT(LOG_ERR, "Error parsing 'diskSeq': %s\n",
             pError->message);
         json_reader_end_member(pReader);
+        g_object_unref(pReader);
         return false; // failure
     }
 
@@ -113,6 +135,7 @@ bool cJsonParser::getDiskSeq(std::string serialNumber, gint64 *pValue)
         LOG_EVENT(LOG_ERR, "Error parsing 'diskSeq': %s\n",
             pError->message);
         json_reader_end_member(pReader);
+        g_object_unref(pReader);
         return false; // failure
     }
 
@@ -135,7 +158,26 @@ bool cJsonParser::getStats(std::string serialNumber, struct sBlockStats* pStats)
     }
 
     json_reader_read_member(pReader, serialNumber.c_str());
+    pError = (GError*)json_reader_get_error(pReader);
+    if (pError)
+    {
+        LOG_EVENT(LOG_ERR, "Error parsing 'serialNumber': %s\n",
+            pError->message);
+        json_reader_end_member(pReader);
+        g_object_unref(pReader);
+        return false; // failure
+    }
+
     json_reader_read_member(pReader, "previousStats");
+    pError = (GError*)json_reader_get_error(pReader);
+    if (pError)
+    {
+        LOG_EVENT(LOG_ERR, "Error parsing 'previousStats': %s\n",
+            pError->message);
+        json_reader_end_member(pReader);
+        g_object_unref(pReader);
+        return false; // failure
+    }
 
     int numErrors = 0;
     if (!getValueAsInt(pReader, "readIo", &pStats->readIo))
@@ -216,15 +258,35 @@ bool cJsonParser::getPath(std::string serialNumber, std::string* pValue)
     }
 
     json_reader_read_member(pReader, serialNumber.c_str());
-    json_reader_read_member(pReader, "previousPath");
-    std::string output = (std::string)json_reader_get_string_value(pReader);
+    pError = (GError*)json_reader_get_error(pReader);
+    if (pError)
+    {
+        LOG_EVENT(LOG_ERR, "Error parsing 'serialNumber': %s\n",
+            pError->message);
+        json_reader_end_member(pReader);
+        g_object_unref(pReader);
+        return false; // failure
+    }
 
+    json_reader_read_member(pReader, "previousPath");
+    pError = (GError*)json_reader_get_error(pReader);
+    if (pError)
+    {
+        LOG_EVENT(LOG_ERR, "Error parsing 'previousPath': %s\n",
+            pError->message);
+        json_reader_end_member(pReader);
+        g_object_unref(pReader);
+        return false; // failure
+    }
+
+    std::string output = (std::string)json_reader_get_string_value(pReader);
     pError = (GError*)json_reader_get_error(pReader);
     if (pError)
     {
         LOG_EVENT(
             LOG_ERR, "Unable to parse 'previous_path': %s\n", pError->message);
-        g_error_free(pError);
+        json_reader_end_member(pReader);
+        g_object_unref(pReader);
         return false; // failure
     }
 
