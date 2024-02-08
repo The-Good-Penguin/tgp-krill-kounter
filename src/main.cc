@@ -142,7 +142,7 @@ void parseFile(void)
     }
 }
 
-gboolean updateStats(gpointer data)
+gboolean updateStats(void)
 {
     LOG_EVENT(LOG_INFO, "Updating device stats for [%s]\n",
         targetDevice.serialNumber.c_str());
@@ -189,6 +189,11 @@ gboolean updateStats(gpointer data)
     }
 
     return TRUE;
+}
+
+gboolean timerCallback(gpointer data)
+{
+    return updateStats();
 }
 
 gboolean checkStatsFilePath()
@@ -291,7 +296,9 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    timeoutId = g_timeout_add(updateRate * CONST_RATE_TO_MILLISECONDS, updateStats, pLoop);
+    updateStats();
+
+    timeoutId = g_timeout_add(updateRate * CONST_RATE_TO_MILLISECONDS, timerCallback, pLoop);
     g_main_loop_run(pLoop);
 
     return EXIT_SUCCESS;
