@@ -20,6 +20,8 @@ A utility for monitoring and logging block device stats to a JSON file at a regu
 3. KrillKounter can be configured by editing `Enviroment` values within `/lib/systemd/system/KrillKounter.service`;
 
 ```
+KK_CONFIG_PATH - Path to the JSON file to be used for configuring the daemon in JSON instead of configuring via the variables below
+
 KK_STATS_PATH - Path to the JSON file to be used for logging of block device stats and info.
 
 KK_DEVICE_PATH - Path to the target block device to be monitored by KrillKounter [e.g. /dev/sda]

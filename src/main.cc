@@ -20,10 +20,14 @@ cJsonWriter writer;
 cStatReader reader;
 cStatComputer computer;
 struct jsonDeviceEntry targetDevice;
+struct jsonDeviceConfig targetConfig;
+std::string configFilePath;
 
 // converts the update rate to milliseconds
 constexpr int   CONST_RATE_TO_MILLISECONDS   = 1000;
 constexpr uint  CONST_SECTOR_SIZE            = 512;
+constexpr std::string_view CONST_DEFAULT_CONFIG_PATH    = "/usr/share/KrillKounter/config.json";
+constexpr std::string_view CONST_DEFAULT_STATS_PATH     = "/usr/share/KrillKounter/stats.json";
 
 // glib variables
 GError* pError           = nullptr;
@@ -32,24 +36,29 @@ GMainLoop* pLoop         = nullptr;
 guint timeoutId          = 0;
 
 // cli values
-std::string statsFilePath = "~/.KrillKounter/stats.json";
-std::string deviceName;
-std::string devicePath;
-uint updateRate        = 3600; // seconds
-bool printBlockDevices = false;
+gchar *cliStatsFilePath     = nullptr;
+gchar *cliConfigFilePath    = nullptr;
+gchar *cliDeviceName        = nullptr;
+gchar *cliDevicePath        = nullptr;
+uint   updateRate           = 3600; // seconds
+bool   printBlockDevices    = false;
 
-// cli arguements
-GOptionEntry options[] = { { "stats-file", 's', 0, G_OPTION_ARG_STRING,
-                               &statsFilePath, "JSON stats file path" },
-    { "device-path", 'd', 0, G_OPTION_ARG_STRING, &devicePath,
-        "path of block device" },
-    { "device-name", 'n', 0, G_OPTION_ARG_STRING, &deviceName,
-        "name of block device" },
-    { "update-rate", 'r', 0, G_OPTION_ARG_INT, &updateRate,
-        "update rate of checks (seconds)" },
-    { "print-devices", 'p', 0, G_OPTION_ARG_NONE, &printBlockDevices,
-        "print all available block devices" },
-    { NULL } };
+// cli arguments
+GOptionEntry options[] = {
+    { "config-file", 'c', 0, G_OPTION_ARG_FILENAME,
+        &cliConfigFilePath, "JSON config file path" },
+    { "stats-file", 's', 0, G_OPTION_ARG_FILENAME,
+        &cliStatsFilePath, "JSON stats file path" },
+    { "device-path", 'd', 0, G_OPTION_ARG_STRING,
+        &cliDevicePath, "path of block device" },
+    { "device-name", 'n', 0, G_OPTION_ARG_STRING,
+        &cliDeviceName, "name of block device" },
+    { "update-rate", 'r', 0, G_OPTION_ARG_INT,
+        &updateRate, "update rate of checks (seconds)" },
+    { "print-devices", 'p', 0, G_OPTION_ARG_NONE,
+        &printBlockDevices, "print all available block devices" },
+    { NULL }
+};
 
 void printAllBlockDevices(void)
 {
@@ -65,7 +74,7 @@ void printAllBlockDevices(void)
 void getSerialNumber(void)
 {
     struct sDeviceSpecs specs;
-    if (!reader.getSpecs(deviceName, &specs))
+    if (!reader.getSpecs(targetConfig.deviceName, &specs))
     {
         LOG_EVENT(LOG_ERR, "Unable to get device serial number\n");
         exit(EXIT_FAILURE);
@@ -73,13 +82,34 @@ void getSerialNumber(void)
     targetDevice.serialNumber = specs.serial.value;
 }
 
-void parseFile(void)
+gboolean parseConfigFile(void)
+{
+    if (!parser.openJson(configFilePath))
+    {
+        LOG_EVENT(LOG_ERR, "Unable to open config file\n");
+        return false;
+    }
+    if (!parser.getConfig(&targetConfig))
+    {
+        LOG_EVENT(LOG_ERR, "Unable to read device stats\n");
+        return false;
+    }
+    if (!parser.closeJson())
+    {
+        LOG_EVENT(LOG_ERR, "Unable to close JSON reader\n");
+        return false;
+    }
+
+    return true;
+}
+
+void parseStatsFile(void)
 {
     // Check if file exists
-    const std::filesystem::path statsFile = (statsFilePath);
+    const std::filesystem::path statsFile = targetConfig.statsFilePath;
     if (std::filesystem::exists(statsFile))
     {
-        if (!parser.openJson(statsFilePath))
+        if (!parser.openJson(targetConfig.statsFilePath))
         {
             LOG_EVENT(LOG_ERR, "Unable to open stats file\n");
             exit(EXIT_FAILURE);
@@ -111,7 +141,7 @@ void parseFile(void)
                 exit(EXIT_FAILURE);
             }
 
-            if (!reader.getStats(deviceName, &targetDevice.stats))
+            if (!reader.getStats(targetConfig.deviceName, &targetDevice.stats))
             {
                 LOG_EVENT(LOG_ERR, "Unable to read device stats\n");
                 exit(EXIT_FAILURE);
@@ -134,7 +164,7 @@ void parseFile(void)
         else
         {
             // no existing device data in json
-            targetDevice.previousPath = devicePath;
+            targetDevice.previousPath = targetConfig.devicePath;
         }
     }
 }
@@ -148,7 +178,7 @@ gboolean updateStats(void)
     auto previousStats = targetDevice.stats;
 
     // get sequence
-    if (!reader.getDiskSeq(deviceName, &targetDevice.diskSeq))
+    if (!reader.getDiskSeq(targetConfig.deviceName, &targetDevice.diskSeq))
     {
         LOG_EVENT(LOG_ERR, "Unable to read device sequence\n");
         exit(EXIT_FAILURE);
@@ -159,7 +189,7 @@ gboolean updateStats(void)
         previousStats = {};
 
     // get new values
-    if (!reader.getStats(deviceName, &targetDevice.stats))
+    if (!reader.getStats(targetConfig.deviceName, &targetDevice.stats))
     {
         LOG_EVENT(LOG_ERR, "Unable to read device stats\n");
         exit(EXIT_FAILURE);
@@ -177,8 +207,8 @@ gboolean updateStats(void)
         targetDevice.stats.writeSectors, previousStats.writeSectors,
         targetDevice.totalBytesWritten);
 
-    if (!writer.writeJson(statsFilePath, statsFilePath,
-            targetDevice.serialNumber, devicePath, &targetDevice.outputStats,
+    if (!writer.writeJson(targetConfig.statsFilePath, targetConfig.statsFilePath,
+            targetDevice.serialNumber, targetConfig.devicePath, &targetDevice.outputStats,
             targetDevice.diskSeq ,targetDevice.totalBytesWritten))
     {
         LOG_EVENT(LOG_ERR, "Unable to write device stats to file\n");
@@ -197,13 +227,14 @@ gboolean checkStatsFilePath()
 {
     FILE *pFile;
 
-    LOG_EVENT(LOG_INFO, "Checking stats path [%s]\n", statsFilePath.c_str());
+    LOG_EVENT(LOG_INFO, "Checking stats path [%s]\n", targetConfig.statsFilePath.c_str());
     /* if the file is in the root directory or has no directory */
-    auto ret = statsFilePath.find_last_of('/');
+    auto ret = targetConfig.statsFilePath.find_last_of('/');
     if (ret == 0 || ret == std::string::npos)
         return true; // success
 
-    auto statsDirectory = statsFilePath.substr(0, ret);
+
+    auto statsDirectory = targetConfig.statsFilePath.substr(0, ret);
     if (!std::filesystem::exists(statsDirectory)) {
         std::string command = "mkdir -p " + statsDirectory;
         pFile = popen(command.c_str(), "r");
@@ -271,10 +302,18 @@ int main(int argc, char* argv[])
     {
         printAllBlockDevices();
     }
-    // convert cstring to std::string
-    statsFilePath = (std::string)statsFilePath.c_str();
-    deviceName    = (std::string)deviceName.c_str();
-    devicePath    = (std::string)devicePath.c_str();
+
+    configFilePath = cliConfigFilePath == nullptr
+        ? CONST_DEFAULT_CONFIG_PATH : (std::string)cliConfigFilePath;
+
+    targetConfig.updateRate = updateRate;
+    targetConfig.statsFilePath = cliStatsFilePath == nullptr
+        ? CONST_DEFAULT_STATS_PATH : (std::string)cliStatsFilePath;
+
+    if (parseConfigFile() == false) {
+        targetConfig.deviceName = (std::string )cliDeviceName;
+        targetConfig.devicePath = (std::string )cliDevicePath;
+    }
 
     if (checkStatsFilePath() == false)
         exit(EXIT_FAILURE);
@@ -282,7 +321,7 @@ int main(int argc, char* argv[])
     getSerialNumber();
 
     // parse stats json file
-    parseFile();
+    parseStatsFile();
 
     // loop & check
     pLoop = g_main_loop_new(nullptr, FALSE);

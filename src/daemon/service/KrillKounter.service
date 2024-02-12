@@ -12,6 +12,7 @@ Environment=KK_DEVICE_NAME=sda
 Environment=KK_UPDATE_RATE=3600
 Environment=KK_SECTOR_SIZE=512
 ExecStart=/usr/bin/KrillKounter \
+-c ${KK_CONFIG_PATH} \
 -s ${KK_STATS_PATH} \
 -d ${KK_DEVICE_PATH} \
 -n ${KK_DEVICE_NAME} \
