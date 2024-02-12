@@ -241,7 +241,7 @@ void onExit(void)
     parser.closeJson();
     if (pError)
     {
-        g_object_unref(pError);
+        g_error_free(pError);
     }
     if (pContext)
     {
