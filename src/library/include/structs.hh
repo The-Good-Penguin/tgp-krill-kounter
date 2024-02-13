@@ -62,4 +62,12 @@ struct jsonDeviceEntry
         gint64 diskSeq;
 };
 
+
+struct jsonDeviceConfig
+{
+        std::string deviceName;
+        std::string devicePath;
+        gint64 updateRate;
+        std::string statsFilePath;
+};
 #endif /* _STRUCTS_H */

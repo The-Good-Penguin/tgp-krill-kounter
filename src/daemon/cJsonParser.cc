@@ -43,6 +43,37 @@ bool cJsonParser::closeJson()
     return true; // success
 }
 
+bool cJsonParser::getConfig(struct jsonDeviceConfig* pConfig)
+{
+    GError* pError      = nullptr;
+    JsonReader* pReader = json_reader_new(json_parser_get_root(_pJsonParser));
+    pError              = (GError*)json_reader_get_error(pReader);
+    if (pError)
+    {
+        LOG_EVENT(LOG_ERR, "Unable to parse file: %s\n", pError->message);
+        g_error_free(pError);
+        return false; // failure
+    }
+
+    // Required members
+    unsigned numErrors = 0;
+    if (!getValueAsString(pReader, "deviceName", &pConfig->deviceName))
+    {
+        numErrors++;
+    }
+    if (!getValueAsString(pReader, "devicePath", &pConfig->devicePath))
+    {
+        numErrors++;
+    }
+
+    // Optional members
+    getValueAsInt(pReader, "updateRate", &pConfig->updateRate);
+    getValueAsString(pReader, "statsFilePath", &pConfig->statsFilePath);
+
+    g_object_unref(pReader);
+    return numErrors == 0;
+}
+
 bool cJsonParser::getTotalBytesWritten(std::string serialNumber, gint64 *pValue)
 {
     GError* pError      = nullptr;
@@ -335,6 +366,27 @@ bool cJsonParser::getValueAsInt(
     }
 
     *pValue = value;
+
+    json_reader_end_member(pReader);
+    return true; // success
+}
+
+bool cJsonParser::getValueAsString(
+    JsonReader* pReader, std::string itemName, std::string *pValue)
+{
+    json_reader_read_member(pReader, itemName.c_str());
+    auto value = json_reader_get_string_value(pReader);
+
+    auto pError = (GError*)json_reader_get_error(pReader);
+    if (pError)
+    {
+        LOG_EVENT(
+            LOG_ERR, "Unable to parse '%s': %s\n", itemName.c_str(), pError->message);
+        json_reader_end_member(pReader);
+        return false; // failure
+    }
+
+    *pValue = (std::string) value;
 
     json_reader_end_member(pReader);
     return true; // success

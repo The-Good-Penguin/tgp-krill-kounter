@@ -12,6 +12,7 @@ class cJsonParser
     public:
         bool openJson(std::string jsonPath);
         bool closeJson();
+        bool getConfig(jsonDeviceConfig* pConfig);
         bool getTotalBytesWritten(std::string serialNumber, gint64* pValue);
         bool getDiskSeq(std::string serialNumber, gint64* pValue);
         bool getStats(std::string serialNumber, struct sBlockStats* pStats);
@@ -21,6 +22,8 @@ class cJsonParser
     private:
         bool getValueAsInt(
             JsonReader* pReader, std::string itemName, gint64 * pValue);
+        bool getValueAsString(
+            JsonReader* pReader, std::string itemName, std::string* pValue);
         JsonParser* _pJsonParser;
         int _parserOpen = false;
 };
