@@ -166,7 +166,7 @@ bool cStatReader::getSpecsEmmc(
     https://www.cameramemoryspeed.com/sd-memory-card-faq/reading-sd-card-cid-serial-psn-internal-numbers/
     */
 
-    std::string devicePath = "/sys/block/" + deviceName + "/device/block";
+    std::string devicePath = "/sys/block/" + deviceName + "/device";
 
     // Check path is valid
     if (std::filesystem::exists(devicePath) == false)
