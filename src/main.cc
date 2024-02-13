@@ -4,7 +4,6 @@
 #include <iostream>
 #include <json-glib/json-glib.h>
 #include <string>
-#include <sys/stat.h>
 
 #include "daemon/cJsonParser.hh"
 #include "daemon/cJsonWriter.hh"
@@ -196,7 +195,6 @@ gboolean timerCallback(gpointer data)
 
 gboolean checkStatsFilePath()
 {
-    struct stat dirStats{};
     FILE *pFile;
 
     LOG_EVENT(LOG_INFO, "Checking stats path [%s]\n", statsFilePath.c_str());
@@ -205,8 +203,8 @@ gboolean checkStatsFilePath()
     if (ret == 0 || ret == std::string::npos)
         return true; // success
 
-    auto const statsDirectory = statsFilePath.substr(0, ret);
-    if (stat(statsDirectory.c_str(), &dirStats) != 0) {
+    auto statsDirectory = statsFilePath.substr(0, ret);
+    if (!std::filesystem::exists(statsDirectory)) {
         std::string command = "mkdir -p " + statsDirectory;
         pFile = popen(command.c_str(), "r");
         if (nullptr == pFile)
@@ -220,7 +218,7 @@ gboolean checkStatsFilePath()
             LOG_EVENT(LOG_ERR, "Failed to close pFile, %s", strerror(errno));
             return false; // failure
         }
-    } else if (!S_ISDIR(dirStats.st_mode)) {
+    } else if (!std::filesystem::is_directory(statsDirectory)) {
         LOG_EVENT(LOG_ERR, "Error, [%s] exists and is not a directory\n", statsDirectory.c_str());
         return false; // failure
     }
