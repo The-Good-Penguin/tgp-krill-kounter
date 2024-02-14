@@ -22,7 +22,7 @@ bool cJsonWriter::writeJson(std::string jsonPathInput,
     if (f.good())
     {
         // load existing data
-        std::vector<struct jsonDeviceEntry> devices;
+        std::vector<struct sJsonDeviceEntry> devices;
         if (!readExistingJson(jsonPathInput, &devices))
         {
             LOG_EVENT(LOG_ERR, "Unable to read existing json file: %s\n",
@@ -86,7 +86,7 @@ bool cJsonWriter::writeJson(std::string jsonPathInput,
 // private functions
 
 bool cJsonWriter::readExistingJson(
-    std::string jsonPath, std::vector<struct jsonDeviceEntry>* pDevices)
+    std::string jsonPath, std::vector<struct sJsonDeviceEntry>* pDevices)
 {
     // open file
     cJsonParser parser;
@@ -104,15 +104,16 @@ bool cJsonWriter::readExistingJson(
         return false; // failure
     }
 
-    // build jsonDeviceEntry for each device in json file, add to pDevices
+    // build sJsonDeviceEntry for each device in json file, add to pDevices
     for (uint i = 0; i < serialNumbers.size(); i++)
     {
-        struct jsonDeviceEntry device;
+        struct sJsonDeviceEntry device;
         bool error = false;
 
         device.serialNumber = serialNumbers[i];
         error |= !parser.getPath(device.serialNumber, &device.previousPath);
         error |= !parser.getStats(device.serialNumber, &device.stats);
+        error |= !parser.getDiskSeq(device.serialNumber, &device.diskSeq);
         error |= !parser.getTotalBytesWritten(
             device.serialNumber, &device.totalBytesWritten);
 

@@ -20,7 +20,7 @@ class cJsonWriter
         uint _indentLevel = 4;
         JsonBuilder* _pJsonBuilder;
         bool readExistingJson(std::string jsonPath,
-            std::vector<struct jsonDeviceEntry>* pDevices);
+            std::vector<struct sJsonDeviceEntry>* pDevices);
         void addEntryToBuilder(std::string serialNumber,
             std::string previousPath, struct sBlockStats* pStats,
             gint64 diskSeq, gint64 totalBytesWritten);

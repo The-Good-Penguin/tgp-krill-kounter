@@ -4,6 +4,7 @@
 
 #include <glib.h>
 #include <string>
+#include <vector>
 
 struct sBlockStatStub
 {
@@ -52,22 +53,30 @@ struct sDeviceSpecs
         struct sBlockStatStub mdt;
 };
 
-struct jsonDeviceEntry
+struct sDeviceEntry
 {
         std::string serialNumber;
-        std::string previousPath;
+        std::string deviceName;
+        std::string devicePath;
         struct sBlockStats stats;
         struct sBlockStats outputStats;
         gint64 totalBytesWritten;
         gint64 diskSeq;
 };
 
-
-struct jsonDeviceConfig
+struct sJsonDeviceEntry
 {
-        std::string deviceName;
-        std::string devicePath;
-        gint64 updateRate;
+        std::string serialNumber;
+        std::string previousPath;
+        struct sBlockStats stats;
+        gint64 totalBytesWritten;
+        gint64 diskSeq;
+};
+
+struct sJsonDevicesConfig
+{
+        std::vector<std::string> devices;
         std::string statsFilePath;
+        gint64 updateRate;
 };
 #endif /* _STRUCTS_H */
