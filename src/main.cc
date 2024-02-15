@@ -3,6 +3,7 @@
 #include <glib.h>
 #include <iostream>
 #include <json-glib/json-glib.h>
+#include <map>
 #include <string>
 
 #include "daemon/cJsonParser.hh"
@@ -19,9 +20,9 @@ cJsonParser parser;
 cJsonWriter writer;
 cStatReader reader;
 cStatComputer computer;
-struct jsonDeviceEntry targetDevice;
-struct jsonDeviceConfig targetConfig;
-std::string configFilePath;
+
+std::map<std::string, struct sDeviceEntry> targetDevices;
+struct sJsonDevicesConfig targetConfig;
 
 // converts the update rate to milliseconds
 constexpr int   CONST_RATE_TO_MILLISECONDS   = 1000;
@@ -42,6 +43,7 @@ gchar *cliDeviceName        = nullptr;
 gchar *cliDevicePath        = nullptr;
 uint   updateRate           = 3600; // seconds
 bool   printBlockDevices    = false;
+std::string configFilePath;
 
 // cli arguments
 GOptionEntry options[] = {
@@ -71,19 +73,27 @@ void printAllBlockDevices(void)
     exit(EXIT_SUCCESS);
 }
 
-void getSerialNumber(void)
+void getSerialNumber(std::string devicePath)
 {
     struct sDeviceSpecs specs;
-    if (!reader.getSpecs(targetConfig.deviceName, &specs))
+    if (!targetDevices.contains(devicePath))
+    {
+        LOG_EVENT(LOG_ERR, "Unable to find [%s] in target devices\n", devicePath.c_str());
+        exit(EXIT_FAILURE);
+    }
+
+    auto const deviceName = targetDevices[devicePath].deviceName;
+    if (!reader.getSpecs(deviceName, &specs))
     {
         LOG_EVENT(LOG_ERR, "Unable to get device serial number\n");
         exit(EXIT_FAILURE);
     }
-    targetDevice.serialNumber = specs.serial.value;
+    targetDevices[devicePath].serialNumber = specs.serial.value;
 }
 
 gboolean parseConfigFile(void)
 {
+    gboolean ret = false; // failure
     if (!parser.openJson(configFilePath))
     {
         LOG_EVENT(LOG_ERR, "Unable to open config file\n");
@@ -91,16 +101,41 @@ gboolean parseConfigFile(void)
     }
     if (!parser.getConfig(&targetConfig))
     {
-        LOG_EVENT(LOG_ERR, "Unable to read device stats\n");
-        return false;
+        LOG_EVENT(LOG_ERR, "Error processing config file\n");
+        goto error;
     }
+
+    if (targetConfig.devices.empty()) {
+        LOG_EVENT(LOG_INFO, "No devices to monitor in config file\n");
+        goto error;
+    }
+
+    for (const auto& devicePath : targetConfig.devices) {
+        if (!std::filesystem::exists(devicePath)) {
+            LOG_EVENT(LOG_ERR, "path [%s] does not exist\n", devicePath.c_str());
+            exit(EXIT_FAILURE);
+        }
+
+        if (!std::filesystem::is_block_file(devicePath)) {
+            LOG_EVENT(LOG_ERR, "[%s] is not a block device\n", devicePath.c_str());
+            exit(EXIT_FAILURE);
+        }
+
+        targetDevices.insert({ devicePath,
+            (struct sDeviceEntry) {
+                .deviceName = devicePath.substr(devicePath.find_last_of("/") + 1),
+                .devicePath = devicePath }
+        });
+    }
+    ret = true; // success
+
+error:
     if (!parser.closeJson())
     {
         LOG_EVENT(LOG_ERR, "Unable to close JSON reader\n");
         return false;
     }
-
-    return true;
+    return ret;
 }
 
 void parseStatsFile(void)
@@ -123,111 +158,112 @@ void parseStatsFile(void)
                 LOG_ERR, "Unable to retrieve serial numbers from json file\n");
             exit(EXIT_FAILURE);
         }
-        if (std::find(serialNumbers.begin(), serialNumbers.end(),
-                targetDevice.serialNumber)
-            != serialNumbers.end())
+
+        for (auto &[devicePath, targetDevice] : targetDevices)
         {
-            // device exists in json already
-            if (!parser.getPath(
-                    targetDevice.serialNumber, &targetDevice.previousPath))
+            if (std::find(serialNumbers.begin(), serialNumbers.end(),
+                    targetDevice.serialNumber)
+                != serialNumbers.end())
             {
-                LOG_EVENT(LOG_ERR, "Unable to read previousPath\n");
-                exit(EXIT_FAILURE);
-            }
-            if (!parser.getStats(
-                    targetDevice.serialNumber, &targetDevice.outputStats))
-            {
-                LOG_EVENT(LOG_ERR, "Unable to read device stats\n");
-                exit(EXIT_FAILURE);
-            }
+                // device exists in json already
+                if (!parser.getStats(
+                        targetDevice.serialNumber, &targetDevice.outputStats))
+                {
+                    LOG_EVENT(LOG_ERR, "Unable to read device stats\n");
+                    exit(EXIT_FAILURE);
+                }
 
-            if (!reader.getStats(targetConfig.deviceName, &targetDevice.stats))
-            {
-                LOG_EVENT(LOG_ERR, "Unable to read device stats\n");
-                exit(EXIT_FAILURE);
-            }
+                if (!reader.getStats(
+                        targetDevice.deviceName, &targetDevice.stats))
+                {
+                    LOG_EVENT(LOG_ERR, "Unable to read device stats\n");
+                    exit(EXIT_FAILURE);
+                }
 
-            if (!parser.getDiskSeq(
-                    targetDevice.serialNumber, &targetDevice.diskSeq))
-            {
-                LOG_EVENT(LOG_ERR, "Unable to read disk sequence\n");
-                exit(EXIT_FAILURE);
-            }
+                if (!parser.getDiskSeq(
+                        targetDevice.serialNumber, &targetDevice.diskSeq))
+                {
+                    LOG_EVENT(LOG_ERR, "Unable to read disk sequence\n");
+                    exit(EXIT_FAILURE);
+                }
 
-            if (!parser.getTotalBytesWritten(
-                    targetDevice.serialNumber, &targetDevice.totalBytesWritten))
-            {
-                LOG_EVENT(LOG_ERR, "Unable to read totalBytesWritten\n");
-                exit(EXIT_FAILURE);
+                if (!parser.getTotalBytesWritten(targetDevice.serialNumber,
+                        &targetDevice.totalBytesWritten))
+                {
+                    LOG_EVENT(LOG_ERR, "Unable to read totalBytesWritten\n");
+                    exit(EXIT_FAILURE);
+                }
             }
-        }
-        else
-        {
-            // no existing device data in json
-            targetDevice.previousPath = targetConfig.devicePath;
         }
     }
 }
 
-gboolean updateStats(void)
+void updateStats(struct sDeviceEntry *targetDevice)
 {
     LOG_EVENT(LOG_INFO, "Updating device stats for [%s]\n",
-        targetDevice.serialNumber.c_str());
+        targetDevice->serialNumber.c_str());
 
-    auto previousDiskSeq = targetDevice.diskSeq;
-    auto previousStats = targetDevice.stats;
+    auto previousDiskSeq = targetDevice->diskSeq;
+    auto previousStats = targetDevice->stats;
 
     // get sequence
-    if (!reader.getDiskSeq(targetConfig.deviceName, &targetDevice.diskSeq))
+    if (!reader.getDiskSeq(targetDevice->deviceName, &targetDevice->diskSeq))
     {
         LOG_EVENT(LOG_ERR, "Unable to read device sequence\n");
         exit(EXIT_FAILURE);
     }
 
     // reset previous stats if disk sequence has changed
-    if (targetDevice.diskSeq != previousDiskSeq)
+    if (targetDevice->diskSeq != previousDiskSeq)
         previousStats = {};
 
     // get new values
-    if (!reader.getStats(targetConfig.deviceName, &targetDevice.stats))
+    if (!reader.getStats(targetDevice->deviceName, &targetDevice->stats))
     {
         LOG_EVENT(LOG_ERR, "Unable to read device stats\n");
         exit(EXIT_FAILURE);
     }
 
     // return if the stats haven't changed
-    if (targetDevice.stats == previousStats)
-        return TRUE;
+    if (targetDevice->stats == previousStats)
+        return;
 
     computer.updateStats(&previousStats,
-        &targetDevice.stats, &targetDevice.outputStats);
+        &targetDevice->stats, &targetDevice->outputStats);
 
 
-    targetDevice.totalBytesWritten = computer.totalBytesWritten(CONST_SECTOR_SIZE,
-        targetDevice.stats.writeSectors, previousStats.writeSectors,
-        targetDevice.totalBytesWritten);
+    targetDevice->totalBytesWritten = computer.totalBytesWritten(CONST_SECTOR_SIZE,
+        targetDevice->stats.writeSectors, previousStats.writeSectors,
+        targetDevice->totalBytesWritten);
 
-    if (!writer.writeJson(targetConfig.statsFilePath, targetConfig.statsFilePath,
-            targetDevice.serialNumber, targetConfig.devicePath, &targetDevice.outputStats,
-            targetDevice.diskSeq ,targetDevice.totalBytesWritten))
+    if (!writer.writeJson(targetConfig.statsFilePath,
+            targetConfig.statsFilePath, targetDevice->serialNumber,
+            targetDevice->devicePath, &targetDevice->outputStats,
+            targetDevice->diskSeq, targetDevice->totalBytesWritten))
     {
         LOG_EVENT(LOG_ERR, "Unable to write device stats to file\n");
         exit(EXIT_FAILURE);
     }
+}
 
-    return TRUE;
+inline void updateAllDeviceStats(void)
+{
+    for (auto const & device : targetConfig.devices)
+        updateStats(&targetDevices[device]);
 }
 
 gboolean timerCallback(gpointer data)
 {
-    return updateStats();
+    updateAllDeviceStats();
+    return true;
 }
 
 gboolean checkStatsFilePath()
 {
     FILE *pFile;
 
-    LOG_EVENT(LOG_INFO, "Checking stats path [%s]\n", targetConfig.statsFilePath.c_str());
+    LOG_EVENT(LOG_INFO, "Checking stats path [%s]\n",
+        targetConfig.statsFilePath.c_str());
     /* if the file is in the root directory or has no directory */
     auto ret = targetConfig.statsFilePath.find_last_of('/');
     if (ret == 0 || ret == std::string::npos)
@@ -311,14 +347,27 @@ int main(int argc, char* argv[])
         ? CONST_DEFAULT_STATS_PATH : (std::string)cliStatsFilePath;
 
     if (parseConfigFile() == false) {
-        targetConfig.deviceName = (std::string )cliDeviceName;
-        targetConfig.devicePath = (std::string )cliDevicePath;
+        if (cliDevicePath == nullptr || cliDeviceName == nullptr) {
+            LOG_EVENT(LOG_ERR, "deviceName and devicePath should be present "
+                               "if config is missing/invalid");
+            exit(EXIT_FAILURE);
+        }
+
+        targetDevices.insert({(std::string )cliDevicePath,
+            (struct sDeviceEntry) {
+                .deviceName = (std::string )cliDeviceName,
+                .devicePath = (std::string )cliDevicePath,
+
+            }});
     }
 
     if (checkStatsFilePath() == false)
         exit(EXIT_FAILURE);
 
-    getSerialNumber();
+    for (const auto& device : targetConfig.devices)
+    {
+        getSerialNumber(device);
+    }
 
     // parse stats json file
     parseStatsFile();
@@ -331,7 +380,7 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    updateStats();
+    updateAllDeviceStats();
 
     timeoutId = g_timeout_add(updateRate * CONST_RATE_TO_MILLISECONDS, timerCallback, pLoop);
     g_main_loop_run(pLoop);

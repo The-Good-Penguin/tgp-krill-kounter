@@ -43,7 +43,7 @@ bool cJsonParser::closeJson()
     return true; // success
 }
 
-bool cJsonParser::getConfig(struct jsonDeviceConfig* pConfig)
+bool cJsonParser::getConfig(struct sJsonDevicesConfig* pConfig)
 {
     GError* pError      = nullptr;
     JsonReader* pReader = json_reader_new(json_parser_get_root(_pJsonParser));
@@ -55,23 +55,50 @@ bool cJsonParser::getConfig(struct jsonDeviceConfig* pConfig)
         return false; // failure
     }
 
-    // Required members
-    unsigned numErrors = 0;
-    if (!getValueAsString(pReader, "deviceName", &pConfig->deviceName))
+    json_reader_read_member(pReader, "devices");
+    pError = (GError*)json_reader_get_error(pReader);
+    if (pError)
     {
-        numErrors++;
+        LOG_EVENT(LOG_ERR, "Error parsing 'devices': %s\n",
+            pError->message);
+        json_reader_end_member(pReader);
+        g_object_unref(pReader);
+        return false; // failure
     }
-    if (!getValueAsString(pReader, "devicePath", &pConfig->devicePath))
+    auto node = json_reader_get_current_node(pReader);
+    if (json_node_get_node_type(node) != JSON_NODE_ARRAY) {
+        LOG_EVENT(LOG_ERR, "Error parsing 'devices': devices is not an array\n");
+        json_reader_end_member(pReader);
+        g_object_unref(pReader);
+        return false; // failure
+    }
+
+    auto devicePathArray = json_node_get_array(node);
+    if (devicePathArray == nullptr)
     {
-        numErrors++;
+        LOG_EVENT(LOG_ERR, "Error parsing 'devices': error getting array\n");
+        json_reader_end_member(pReader);
+        g_object_unref(pReader);
+        return false; // failure
     }
+
+    json_array_foreach_element(devicePathArray, [](JsonArray *array,
+                                          guint index_, JsonNode *element_node,
+                                          gpointer user_data){
+            auto config = (struct sJsonDevicesConfig*) user_data;
+            auto devicePath = json_node_get_string(element_node);
+            if (devicePath != nullptr)
+                config->devices.emplace_back((std::string) devicePath);
+
+    },pConfig);
+    json_reader_end_member(pReader);
 
     // Optional members
     getValueAsInt(pReader, "updateRate", &pConfig->updateRate);
     getValueAsString(pReader, "statsFilePath", &pConfig->statsFilePath);
 
     g_object_unref(pReader);
-    return numErrors == 0;
+    return true; // success
 }
 
 bool cJsonParser::getTotalBytesWritten(std::string serialNumber, gint64 *pValue)

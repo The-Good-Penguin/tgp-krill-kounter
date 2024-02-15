@@ -12,7 +12,7 @@ class cJsonParser
     public:
         bool openJson(std::string jsonPath);
         bool closeJson();
-        bool getConfig(jsonDeviceConfig* pConfig);
+        bool getConfig(sJsonDevicesConfig* pConfig);
         bool getTotalBytesWritten(std::string serialNumber, gint64* pValue);
         bool getDiskSeq(std::string serialNumber, gint64* pValue);
         bool getStats(std::string serialNumber, struct sBlockStats* pStats);

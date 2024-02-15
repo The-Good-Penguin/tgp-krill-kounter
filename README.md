@@ -17,7 +17,7 @@ A utility for monitoring and logging block device stats to a JSON file at a regu
 
 # Installation
 1. From inside the previously created `build/` subdirectory, run the command `sudo cmake --build . --target install`. This will install the executable to `/usr/bin/KrillKounter`, and the systemd service file to `/lib/systemd/system/KrillKounter.service`.
-3. KrillKounter can be configured by editing `Enviroment` values within `/lib/systemd/system/KrillKounter.service`;
+2. KrillKounter can be configured by editing `Enviroment` values within `/lib/systemd/system/KrillKounter.service`;
 
 ```
 KK_CONFIG_PATH - Path to the JSON file to be used for configuring the daemon in JSON instead of configuring via the variables below
@@ -31,7 +31,20 @@ KK_DEVICE_NAME - Name of the target block device to be monitored by KrillKounter
 KK_UPDATE_RATE - Time interval to wait between JSON file updates, in seconds.
 ```
 
-4. Enable and start the KrillKounter systemd service using the following command `systemctl enable --now KrillKounter.service`. The state of the KrillKounter service can be monitored using the command `systemctl status KrillKounter`.
+3. Enable and start the KrillKounter systemd service using the following command `systemctl enable --now KrillKounter.service`. The state of the KrillKounter service can be monitored using the command `systemctl status KrillKounter`.
+
+## Config File Format
+```JSON
+{
+    "devices": [
+        "/dev/sda",
+        "/dev/mmcblk0"
+    ],
+    "updateRate": 3600,
+    "statsFilePath": "/usr/share/KrillKounter/stats.json"
+}
+```
+devices is an array of device paths you wish to monitor
 
 # Contributing
 Issue a PR and follow the guidelines outlined in the CodingStyle.md
