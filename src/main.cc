@@ -382,7 +382,7 @@ int main(int argc, char* argv[])
 
     updateAllDeviceStats();
 
-    timeoutId = g_timeout_add(updateRate * CONST_RATE_TO_MILLISECONDS, timerCallback, pLoop);
+    timeoutId = g_timeout_add(targetConfig.updateRate * CONST_RATE_TO_MILLISECONDS, timerCallback, pLoop);
     g_main_loop_run(pLoop);
 
     return EXIT_SUCCESS;
