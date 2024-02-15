@@ -244,6 +244,19 @@ void updateStats(struct sDeviceEntry *targetDevice)
         LOG_EVENT(LOG_ERR, "Unable to write device stats to file\n");
         exit(EXIT_FAILURE);
     }
+
+    /*
+     * Get new stats here to include the writes to the JSON output file,
+     * this is only important if the stats file is stored on the block device
+     * being monitored. Without this, the next time the function is called,
+     * we will detect the stats changing due to the JSON output and cause an
+     * infinite loop, see #79
+     */
+    if (!reader.getStats(targetDevice->deviceName, &targetDevice->stats))
+    {
+        LOG_EVENT(LOG_ERR, "Unable to read device stats\n");
+        exit(EXIT_FAILURE);
+    }
 }
 
 inline void updateAllDeviceStats(void)
