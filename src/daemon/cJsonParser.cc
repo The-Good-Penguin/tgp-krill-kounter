@@ -43,6 +43,79 @@ bool cJsonParser::closeJson()
     return true; // success
 }
 
+#if JSON_CHECK_VERSION(1, 8, 0)
+bool cJsonParser::getDevicesArray(JsonReader* pReader, struct sJsonDevicesConfig* pConfig)
+{
+    auto node = json_reader_get_current_node(pReader);
+    if (json_node_get_node_type(node) != JSON_NODE_ARRAY)
+    {
+        LOG_EVENT(
+            LOG_ERR, "Error parsing 'devices': devices is not an array\n");
+        json_reader_end_member(pReader);
+        g_object_unref(pReader);
+        return false; // failure
+    }
+
+    auto devicePathArray = json_node_get_array(node);
+    if (devicePathArray == nullptr)
+    {
+        LOG_EVENT(
+            LOG_ERR, "Error parsing 'devices': error getting array\n");
+        json_reader_end_member(pReader);
+        g_object_unref(pReader);
+        return false; // failure
+    }
+
+    json_array_foreach_element(
+        devicePathArray,
+        [](JsonArray* array, guint index_, JsonNode* element_node,
+            gpointer user_data)
+        {
+            auto config     = (struct sJsonDevicesConfig*)user_data;
+            auto devicePath = json_node_get_string(element_node);
+            if (devicePath != nullptr)
+                config->devices.emplace_back((std::string)devicePath);
+        },
+        pConfig);
+    return true; // success
+}
+#else
+bool cJsonParser::getDevicesArray(JsonReader* pReader, struct sJsonDevicesConfig* pConfig)
+{
+    GError* pError      = nullptr;
+    auto elementCount = json_reader_count_elements(pReader);
+    pError = (GError*)json_reader_get_error(pReader);
+    if (pError)
+    {
+        LOG_EVENT(LOG_ERR, "Error parsing 'devices': %s\n",
+            pError->message);
+        json_reader_end_member(pReader);
+        g_object_unref(pReader);
+        return false; // failure
+    }
+
+    for (int i = 0; i < elementCount; ++i)
+    {
+        json_reader_read_element(pReader, i);
+        pError = (GError*)json_reader_get_error(pReader);
+        if (pError)
+        {
+            LOG_EVENT(LOG_ERR, "Error parsing 'devices': %s\n",
+                pError->message);
+            json_reader_end_member(pReader);
+            g_object_unref(pReader);
+            return false; // failure
+        }
+
+        auto devicePath = json_reader_get_string_value(pReader);
+        if (devicePath != nullptr)
+            pConfig->devices.emplace_back((std::string)devicePath);
+        json_reader_end_element(pReader);
+    }
+    return true; // success
+}
+#endif
+
 bool cJsonParser::getConfig(struct sJsonDevicesConfig* pConfig)
 {
     GError* pError      = nullptr;
@@ -65,32 +138,12 @@ bool cJsonParser::getConfig(struct sJsonDevicesConfig* pConfig)
         g_object_unref(pReader);
         return false; // failure
     }
-    auto node = json_reader_get_current_node(pReader);
-    if (json_node_get_node_type(node) != JSON_NODE_ARRAY) {
-        LOG_EVENT(LOG_ERR, "Error parsing 'devices': devices is not an array\n");
-        json_reader_end_member(pReader);
-        g_object_unref(pReader);
-        return false; // failure
-    }
 
-    auto devicePathArray = json_node_get_array(node);
-    if (devicePathArray == nullptr)
+    if(!getDevicesArray(pReader, pConfig))
     {
-        LOG_EVENT(LOG_ERR, "Error parsing 'devices': error getting array\n");
-        json_reader_end_member(pReader);
-        g_object_unref(pReader);
         return false; // failure
     }
 
-    json_array_foreach_element(devicePathArray, [](JsonArray *array,
-                                          guint index_, JsonNode *element_node,
-                                          gpointer user_data){
-            auto config = (struct sJsonDevicesConfig*) user_data;
-            auto devicePath = json_node_get_string(element_node);
-            if (devicePath != nullptr)
-                config->devices.emplace_back((std::string) devicePath);
-
-    },pConfig);
     json_reader_end_member(pReader);
 
     // Optional members

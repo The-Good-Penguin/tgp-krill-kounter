@@ -24,6 +24,7 @@ class cJsonParser
             JsonReader* pReader, std::string itemName, gint64 * pValue);
         bool getValueAsString(
             JsonReader* pReader, std::string itemName, std::string* pValue);
+        bool getDevicesArray(JsonReader* pReader, sJsonDevicesConfig* pConfig);
         JsonParser* _pJsonParser;
         int _parserOpen = false;
 };
