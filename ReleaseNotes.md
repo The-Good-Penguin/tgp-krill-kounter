@@ -1,3 +1,14 @@
+# Release v0.03
+
+Bug fix release, resolving:
+ *  SIGSEGV when passing a parameter that doesn't exist
+ *  checkStatsFilePath should use std filesystem
+ *  Krill will count its own writes
+ *  Incorrect update rate
+ *  Add LGLP-3.0 license file
+ *  KrillKounter does not compile under Yocto kirkstone
+ *  Create shared library target
+
 # Release v0.02
 
 Bug fix release, resolving:

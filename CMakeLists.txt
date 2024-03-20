@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(KrillKounter VERSION 0.0.2)
+project(KrillKounter VERSION 0.3.0)
 
 # C++20
 set(CMAKE_CXX_STANDARD 20)
