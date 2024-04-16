@@ -16,8 +16,7 @@ ExecStart=/usr/bin/KrillKounter \
 -s ${KK_STATS_PATH} \
 -d ${KK_DEVICE_PATH} \
 -n ${KK_DEVICE_NAME} \
--r ${KK_UPDATE_RATE} \
--b ${KK_SECTOR_SIZE}
+-r ${KK_UPDATE_RATE}
 
 [Install]
 WantedBy=multi-user.target
