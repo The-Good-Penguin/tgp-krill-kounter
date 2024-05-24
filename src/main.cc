@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <glib.h>
+#include <glib-unix.h>
 #include <iostream>
 #include <json-glib/json-glib.h>
 #include <map>
@@ -328,6 +329,25 @@ void onExit(void)
     LogEventDeinit();
 }
 
+gboolean terminationSignalHandler(gpointer pPendingSignal)
+{
+    /* Stop the main loop from running.
+       It is fine to call the following function here as it is thread-safe.
+       Any other non-thread-safe operation should be done outside of this signal
+       handler */
+    g_main_loop_quit(pLoop);
+
+    /* Save the signal number to be able to continue later servicing it with its
+       default handler */
+    *((int*)pPendingSignal) = (int)SIGTERM;
+
+    /* Returning false causes this signal handler to be unregistered as anyway
+       the main loop has ended. Also, unregistering the handler allows to call
+       later the default handler for the given signal without triggering this
+       handler again */
+    return false;
+}
+
 int main(int argc, char* argv[])
 {
     LogEventInit(basename(argv[0]), 6);
@@ -393,10 +413,23 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
+    // Register signal handler to service daemon termination requests
+    int pendingSignal = 0;
+    g_unix_signal_add(SIGTERM, terminationSignalHandler, &pendingSignal);
+
     updateAllDeviceStats();
 
     timeoutId = g_timeout_add(targetConfig.updateRate * CONST_RATE_TO_MILLISECONDS, timerCallback, pLoop);
     g_main_loop_run(pLoop);
+
+    // Save stats when terminating daemon to capture as many writes as possible
+    updateAllDeviceStats();
+
+    // Continue servicing the pending signal, if any, with its default handler
+    if (pendingSignal) {
+        LOG_EVENT(LOG_DEBUG, "Servicing pending signal %i", pendingSignal);
+        raise(pendingSignal);
+    }
 
     return EXIT_SUCCESS;
 }
