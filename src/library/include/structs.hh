@@ -57,6 +57,7 @@ struct sDeviceEntry
 {
         std::string serialNumber;
         std::string deviceName;
+        std::string firstSightingDate;
         std::string devicePath;
         struct sBlockStats stats;
         struct sBlockStats outputStats;
@@ -67,6 +68,7 @@ struct sDeviceEntry
 struct sJsonDeviceEntry
 {
         std::string serialNumber;
+        std::string firstSightingDate;
         std::string previousPath;
         struct sBlockStats stats;
         gint64 totalBytesWritten;
