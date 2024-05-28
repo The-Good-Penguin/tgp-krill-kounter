@@ -3,6 +3,8 @@
 #include <glib.h>
 #include <glib-unix.h>
 #include <iostream>
+#include <chrono>
+#include <format>
 #include <json-glib/json-glib.h>
 #include <map>
 #include <string>
@@ -92,6 +94,12 @@ void getSerialNumber(std::string devicePath)
     targetDevices[devicePath].serialNumber = specs.serial.value;
 }
 
+static std::string getCurrentTimestamp(void)
+{
+    const auto currentTime = std::chrono::system_clock::now();
+    return std::format("{:%d-%m-%Y %H:%M:%OS}", currentTime);
+}
+
 gboolean parseConfigFile(void)
 {
     gboolean ret = false; // failure
@@ -125,6 +133,7 @@ gboolean parseConfigFile(void)
         targetDevices.insert({ devicePath,
             (struct sDeviceEntry) {
                 .deviceName = devicePath.substr(devicePath.find_last_of("/") + 1),
+                .firstSightingDate = getCurrentTimestamp(),
                 .devicePath = devicePath }
         });
     }
@@ -194,6 +203,19 @@ void parseStatsFile(void)
                     LOG_EVENT(LOG_ERR, "Unable to read totalBytesWritten\n");
                     exit(EXIT_FAILURE);
                 }
+
+                std::string firstSightingDate;
+                if (!parser.getFirstSightingDate(targetDevice.serialNumber,
+                        &firstSightingDate))
+                {
+                    LOG_EVENT(LOG_ERR, "Unable to read firstSightingDate\n");
+                    exit(EXIT_FAILURE);
+                }
+                // Keep the first sighting date from the stats file, if any
+                else if (!firstSightingDate.empty())
+                {
+                    targetDevice.firstSightingDate = firstSightingDate;
+                }
             }
         }
     }
@@ -239,8 +261,9 @@ void updateStats(struct sDeviceEntry *targetDevice)
 
     if (!writer.writeJson(targetConfig.statsFilePath,
             targetConfig.statsFilePath, targetDevice->serialNumber,
-            targetDevice->devicePath, &targetDevice->outputStats,
-            targetDevice->diskSeq, targetDevice->totalBytesWritten))
+            targetDevice->firstSightingDate, targetDevice->devicePath,
+            &targetDevice->outputStats, targetDevice->diskSeq,
+            targetDevice->totalBytesWritten))
     {
         LOG_EVENT(LOG_ERR, "Unable to write device stats to file\n");
         exit(EXIT_FAILURE);

@@ -12,8 +12,8 @@ cJsonWriter::cJsonWriter() { _pJsonBuilder = json_builder_new(); }
 
 bool cJsonWriter::writeJson(std::string jsonPathInput,
     std::string jsonPathOutput, std::string serialNumber,
-    std::string previousPath, struct sBlockStats* pStats,
-    gint64 diskSeq, gint64 totalBytesWritten)
+    std::string firstSightingDate, std::string previousPath,
+    struct sBlockStats* pStats, gint64 diskSeq, gint64 totalBytesWritten)
 {
     json_builder_begin_object(_pJsonBuilder);
 
@@ -33,7 +33,8 @@ bool cJsonWriter::writeJson(std::string jsonPathInput,
         // build old json data
         for (uint i = 0; i < devices.size(); i++)
         {
-            addEntryToBuilder(devices[i].serialNumber, devices[i].previousPath,
+            addEntryToBuilder(devices[i].serialNumber,
+                devices[i].firstSightingDate, devices[i].previousPath,
                 &(devices[i].stats), devices[i].diskSeq, devices[i].totalBytesWritten);
         }
 
@@ -47,7 +48,8 @@ bool cJsonWriter::writeJson(std::string jsonPathInput,
     via addEntryToBuilder() above, then the values for that entry will be
     overwritten here before any json is generated or written back to disk.
     */
-    addEntryToBuilder(serialNumber, previousPath, pStats, diskSeq, totalBytesWritten);
+    addEntryToBuilder(serialNumber, firstSightingDate, previousPath, pStats,
+        diskSeq, totalBytesWritten);
 
     json_builder_end_object(_pJsonBuilder);
 
@@ -111,6 +113,7 @@ bool cJsonWriter::readExistingJson(
         bool error = false;
 
         device.serialNumber = serialNumbers[i];
+        error |= !parser.getFirstSightingDate(device.serialNumber, &device.firstSightingDate);
         error |= !parser.getPath(device.serialNumber, &device.previousPath);
         error |= !parser.getStats(device.serialNumber, &device.stats);
         error |= !parser.getDiskSeq(device.serialNumber, &device.diskSeq);
@@ -132,12 +135,15 @@ bool cJsonWriter::readExistingJson(
 }
 
 void cJsonWriter::addEntryToBuilder(std::string serialNumber,
-    std::string previousPath, struct sBlockStats* pStats,
-    gint64 diskSeq, gint64 totalBytesWritten)
+    std::string firstSightingDate, std::string previousPath,
+    struct sBlockStats* pStats, gint64 diskSeq, gint64 totalBytesWritten)
 {
     // serial number
     json_builder_set_member_name(_pJsonBuilder, serialNumber.c_str());
     json_builder_begin_object(_pJsonBuilder);
+    // - first sighting date
+    json_builder_set_member_name(_pJsonBuilder, "firstSightingDate");
+    json_builder_add_string_value(_pJsonBuilder, firstSightingDate.c_str());
     // - previous path
     json_builder_set_member_name(_pJsonBuilder, "previousPath");
     json_builder_add_string_value(_pJsonBuilder, previousPath.c_str());

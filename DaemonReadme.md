@@ -47,6 +47,16 @@ Returns: *bool*
 
 Retreive the `previousPath` value in the entry with the key *serialNumber* from the JSON file previously opened with `openJson`. The value of `previousPath` is written to *pValue*. Returns `true` on success, `false` on failure.
 
+**getFirstSightingDate**
+
+Returns: *bool*
+
+*std::string serialNumber*
+
+*std::string\* pValue*
+
+Retreive the `firstSightingDate` value in the entry with the key *serialNumber* from the JSON file previously opened with `openJson`. The value of `firstSightingDate` is written to *pValue*. Returns `true` on success, `false` on failure.
+
 **getSerialNumbers**
 
 Return: *bool*
@@ -66,6 +76,8 @@ Return: *bool*
 *std::string jsonPathOutput*
 
 *std::string serialNumber*
+
+*std::string firstSightingDate*
 
 *std::string previousPath*
 

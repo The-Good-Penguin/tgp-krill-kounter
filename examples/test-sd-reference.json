@@ -1,5 +1,6 @@
 {
     "123abc": {
+        "firstSightingDate": "24-05-2024 17:24:27",
         "previousPath": "/dev/XXX",
         "previousStats": {
             "readIo": 0,
@@ -21,6 +22,7 @@
         "totalBytesWritten": 123
     },
     "456def": {
+        "firstSightingDate": "24-05-2024 17:23:27",
         "previousPath": "/dev/YYY",
         "previousStats": {
             "readIo": 1,
