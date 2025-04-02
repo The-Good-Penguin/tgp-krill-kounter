@@ -4,7 +4,9 @@
 #include <glib-unix.h>
 #include <iostream>
 #include <chrono>
+#if __has_include(<format>)
 #include <format>
+#endif
 #include <json-glib/json-glib.h>
 #include <map>
 #include <string>
@@ -97,7 +99,15 @@ void getSerialNumber(std::string devicePath)
 static std::string getCurrentTimestamp(void)
 {
     const auto currentTime = std::chrono::system_clock::now();
+    auto in_time_t = std::chrono::system_clock::to_time_t(currentTime);
+
+    std::stringstream ss;
+#ifdef __cpp_lib_format
     return std::format("{:%d-%m-%Y %H:%M:%OS}", currentTime);
+#else
+    ss << std::put_time(std::localtime(&in_time_t), "%d-%m-Y %H:%M:%OS");
+    return ss.str();
+#endif
 }
 
 gboolean parseConfigFile(void)
