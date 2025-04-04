@@ -3,7 +3,7 @@ project(KrillKounter VERSION 0.3.0)
 
 # C++20
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wshadow=local")
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wshadow=local")
 
 # Find packages and libraries
 find_package(PkgConfig REQUIRED)
