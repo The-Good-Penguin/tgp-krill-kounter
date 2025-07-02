@@ -59,7 +59,9 @@ bool cStatReader::getDiskSeq(std::string deviceName, gint64* pSeq)
     if (ifs.is_open() != true)
     {
         LOG_EVENT(LOG_ERR, "Failed to get device events");
-        return false; // failure
+        // diskseq is only available on 5.12 or newer kernels
+        *pSeq = 0;
+        return true;
     }
     std::string line;
     std::getline(ifs, line);
@@ -116,10 +118,14 @@ bool cStatReader::getStats(std::string deviceName, struct sBlockStats* pStats)
     pStats->ioTicks        = (gint64) std::stoi(vec[9]);
     pStats->timeInQueue    = (gint64) std::stoi(vec[10]);
 
-    pStats->discardIo      = (gint64) std::stoul(vec[11]);
-    pStats->discardMerges  = (gint64) std::stoul(vec[12]);
-    pStats->discardSectors = (gint64) std::stoul(vec[13]);
-    pStats->discardTicks   = (gint64) std::stoi(vec[14]);
+    // following values are unavailable on 4.4.x kernels
+    if (vec.size() > 11)
+    {
+        pStats->discardIo      = (gint64) std::stoul(vec[11]);
+        pStats->discardMerges  = (gint64) std::stoul(vec[12]);
+        pStats->discardSectors = (gint64) std::stoul(vec[13]);
+        pStats->discardTicks   = (gint64) std::stoi(vec[14]);
+    }
 
     return true; // success
 }
